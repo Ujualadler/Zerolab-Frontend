@@ -1,0 +1,36 @@
+/* Custom styles for FormBuilder */
+.form-builder-container {
+    background-color: #2a2b2f;
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+  }
+  
+  .form-builder-toolbar {
+    margin-bottom: 20px;
+    background-color: #333;
+    color: white;
+  }
+  
+  .form-builder-preview {
+    margin-top: 20px;
+    background-color: #444;
+    padding: 10px;
+    border-radius: 10px;
+  }
+  
+  .form-builder-component {
+    margin-bottom: 10px;
+    background-color: #555;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  .form-builder-button {
+    background-color: #80FF00;
+    color: black;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
