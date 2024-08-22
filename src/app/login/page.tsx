@@ -1,12 +1,27 @@
+'use client'
+
 import dynamic from "next/dynamic";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../Assets/style/login.css";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const GoogleLoginBtn = dynamic(() => import("../../components/GoogleLogin"), {
   ssr: false,
 });
 
 const Page: React.FC = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const inviteId = searchParams.get('inviteId');  // Extract inviteId from the URL query parameters
+  const [invite, setInvite] = useState<string | null>(null);
+
+  console.log(inviteId)
+
+  useEffect(() => {
+    if (typeof inviteId === 'string') {
+      setInvite(inviteId);
+    }
+  }, [inviteId]);
   return (
     <div className="bg-black flex justify-center items-center">
       <div className="min-h-[100vh] w-[100vw] flex justify-center items-center  bg-no-repeat bg-bottom  ">

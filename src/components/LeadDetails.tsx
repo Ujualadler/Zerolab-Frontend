@@ -675,6 +675,28 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                     </IconButton>
                   </Box>
                 </Grid>
+                <Grid
+                  item
+                  md={6}
+                  color={"white"}
+                  bgcolor={"#2f3247"}
+                  p={2}
+                  borderRadius={1}
+                  mt={3}
+                  container
+                >
+                  <Box
+                    width={"100%"}
+                    display={"flex"}
+                    justifyContent={"space-between"}
+                    alignItems={"center"}
+                  >
+                    <Typography>Work order generation</Typography>
+                  
+                  </Box>
+
+                
+                </Grid>
               </Grid>
             </Grid>
           </Box>
