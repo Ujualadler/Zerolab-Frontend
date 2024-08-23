@@ -9,6 +9,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import the Quill CSS
+import axios from "axios";
 
 const style = {
   position: "absolute" as "absolute",
@@ -90,6 +91,30 @@ const FormAdd: React.FC<FormAddProps> = ({ open, show }) => {
 
   const removeField = (id: number) => {
     setFormFields(formFields.filter((field) => field.id !== id));
+  };
+
+  const handleSave = async () => {
+    try {
+      // Prepare the data to be sent to the backend
+      const formData = {
+        title: formTitle, // The title of the form
+        fields: formFields, // The form fields array
+      };
+
+      console.log(formData);
+
+      // Send a POST request to your backend API to save the form
+      const response = await axios.post("http://localhost:4000/form", formData);
+      setFormFields([]);
+      setFormTitle("");
+
+      // Handle the successful response
+      console.log("Form saved successfully:", response.data);
+      // Optionally, you can reset the form state or navigate to another page
+    } catch (error) {
+      // Handle any errors that occur during the request
+      console.error("Error saving form:", error);
+    }
   };
 
   const renderField = (field: FormField) => {
@@ -475,6 +500,7 @@ const FormAdd: React.FC<FormAddProps> = ({ open, show }) => {
                   background: "#4D9900",
                   marginTop: "10px",
                 }}
+                onClick={handleSave}
               >
                 Save
               </Button>

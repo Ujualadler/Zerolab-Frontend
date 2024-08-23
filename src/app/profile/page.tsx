@@ -73,6 +73,7 @@ interface Product {
   price: string;
   features: Feature[];
   isEditing: boolean; // New property to track editing state
+  isChange: boolean; // New property to track editing state
 }
 const Page: React.FC = () => {
   const router = useRouter();
@@ -82,6 +83,7 @@ const Page: React.FC = () => {
   const [activeItem, setActive] = useState<string>("Invite Members");
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [initialProducts, setInitialProducts] = useState<Product[]>([]);
   const [productName, setProductName] = useState<string>("");
   const [productPrice, setProductPrice] = useState<string>("");
   const [featureNames, setFeatureNames] = useState<string[]>([]);
@@ -97,6 +99,7 @@ const Page: React.FC = () => {
           isEditing: false, // Add isEditing property to each product
         }));
         setProducts(fetchedProducts);
+        setInitialProducts(fetchedProducts);
       } catch (error) {
         console.error("Failed to fetch products:", error);
       }
@@ -104,6 +107,8 @@ const Page: React.FC = () => {
 
     fetchProducts();
   }, []);
+
+  console.log(products);
 
   const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -161,6 +166,7 @@ const Page: React.FC = () => {
           price: productPrice,
           features: [],
           isEditing: false, // Default isEditing state is false
+          isChange: true, // Default isChanging state is false
         },
       ]);
       setFeatureNames([...featureNames, ""]);
@@ -177,6 +183,7 @@ const Page: React.FC = () => {
         name: featureNames[index],
         price: featurePrices[index],
       });
+      updatedProducts[index].isChange = true;
       setProducts(updatedProducts);
 
       const updatedFeatureNames = [...featureNames];
@@ -190,6 +197,7 @@ const Page: React.FC = () => {
 
   const handleRemoveFeature = (productIndex: number, featureIndex: number) => {
     const updatedProducts = [...products];
+    updatedProducts[productIndex].isChange = true;
     updatedProducts[productIndex].features = updatedProducts[
       productIndex
     ].features.filter((_, i) => i !== featureIndex);
@@ -204,6 +212,7 @@ const Page: React.FC = () => {
 
   const handleFeatureNameChange = (index: number, value: string) => {
     const updatedFeatureNames = [...featureNames];
+    console.log(updatedFeatureNames);
     updatedFeatureNames[index] = value;
     setFeatureNames(updatedFeatureNames);
   };
@@ -245,7 +254,11 @@ const Page: React.FC = () => {
       }
 
       const updatedProducts = [...products];
-      updatedProducts[index] = { ...response.data, isEditing: false }; // Update product with response data and stop editing
+      updatedProducts[index] = {
+        ...response.data,
+        isEditing: false,
+        isChange: false,
+      }; // Update product with response data and stop editing
       setProducts(updatedProducts);
     } catch (error) {
       console.error("Failed to save product:", error);
@@ -553,6 +566,7 @@ const Page: React.FC = () => {
                               const updatedProducts = [...products];
                               updatedProducts[productIndex].name =
                                 e.target.value;
+                              updatedProducts[productIndex].isChange = true;
                               setProducts(updatedProducts);
                             }}
                           />
@@ -564,6 +578,7 @@ const Page: React.FC = () => {
                               const updatedProducts = [...products];
                               updatedProducts[productIndex].price =
                                 e.target.value;
+                              updatedProducts[productIndex].isChange = true;
                               setProducts(updatedProducts);
                             }}
                           />
@@ -600,12 +615,6 @@ const Page: React.FC = () => {
                           <DeleteIcon />
                         </IconButton>
                       )}
-
-                      <Switch
-                        checked={product.isEditing}
-                        onChange={() => toggleEditProduct(productIndex)}
-                        inputProps={{ "aria-label": "controlled" }}
-                      />
                     </Box>
                     <Divider
                       sx={{ background: "#8b8b8b", width: "100%", mt: 1 }}
@@ -636,6 +645,7 @@ const Page: React.FC = () => {
                                 updatedProducts[productIndex].features[
                                   featureIndex
                                 ].name = e.target.value;
+                                updatedProducts[productIndex].isChange = true;
                                 setProducts(updatedProducts);
                               }}
                             />
@@ -649,6 +659,7 @@ const Page: React.FC = () => {
                                 updatedProducts[productIndex].features[
                                   featureIndex
                                 ].price = e.target.value;
+                                updatedProducts[productIndex].isChange = true;
                                 setProducts(updatedProducts);
                               }}
                             />
@@ -716,12 +727,42 @@ const Page: React.FC = () => {
                         <AddIcon />
                       </IconButton>
                     </Box>
-                    <IconButton
-                      onClick={() => saveProduct(product, productIndex)}
-                      sx={{ color: "white" }}
+                    <Box
+                      display={"flex"}
+                      gap={"2px"}
+                      px={1}
+                      justifyContent={"space-between"}
+                      mt={1.5}
+                      alignItems={"center"}
                     >
-                      <SaveIcon />
-                    </IconButton>
+                      <Box display={"flex"} alignItems={"center"}>
+                        <Typography color={"whitesmoke"}>Edit</Typography>
+                        <Switch
+                          checked={product.isEditing}
+                          onChange={() => toggleEditProduct(productIndex)}
+                          inputProps={{ "aria-label": "controlled" }}
+                          sx={{
+                            "& .Mui-checked": {
+                              color: "#4D9900",
+                            },
+                            "& .Mui-checked + .MuiSwitch-track": {
+                              backgroundColor: "#4D9900",
+                            },
+                          }}
+                        />
+                      </Box>
+                      {product.isChange && (
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => saveProduct(product, productIndex)}
+                          sx={{ color: "white", background: "#4D9900" }}
+                          startIcon={<SaveIcon />}
+                        >
+                          Save
+                        </Button>
+                      )}
+                    </Box>
                   </Box>
                 </Grid>
               ))}

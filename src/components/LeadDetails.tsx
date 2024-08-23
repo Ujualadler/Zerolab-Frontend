@@ -19,6 +19,8 @@ import {
   DropResult,
 } from "@hello-pangea/dnd";
 import FormAdd from "./FormAdd";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const style = {
   position: "absolute" as "absolute",
@@ -91,6 +93,27 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
   const [columns, setColumns] = React.useState<Column[]>(initialColumns);
   const [showFormAdd, setShowFormAdd] = React.useState<boolean>(false);
   const handleClose = () => show(false);
+  const [forms, setForms] = React.useState<{ _id: string; title: string }[]>(
+    []
+  );
+  const router = useRouter();
+
+  React.useEffect(() => {
+    const fetchForms = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/form");
+        setForms(response.data);
+      } catch (error) {
+        console.error("Error fetching forms:", error);
+      }
+    };
+
+    fetchForms();
+  }, []);
+
+  const handleViewForm = (id: string) => {
+    router.push(`/formPage/${id}`);
+  };
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result;
@@ -129,7 +152,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
 
   return (
     <div>
-      {showFormAdd&& <FormAdd show={setShowFormAdd} open={showFormAdd}/>}
+      {showFormAdd && <FormAdd show={setShowFormAdd} open={showFormAdd} />}
       <Modal
         open={open}
         onClose={handleClose}
@@ -646,7 +669,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   >
                     <Typography>Feedback</Typography>
                     <Button
-                      onClick={()=>setShowFormAdd(true)}
+                      onClick={() => setShowFormAdd(true)}
                       size="small"
                       endIcon={<AddIcon />}
                       sx={{ height: "30px", color: "white", bgcolor: "black" }}
@@ -654,26 +677,29 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                       Form
                     </Button>
                   </Box>
-
-                  <Box
-                    mt={2}
-                    width={"100%"}
-                    display={"flex"}
-                    justifyContent={"space-between"}
-                    alignItems={"center"}
-                    color={"white"}
-                    // bgcolor={'black'}
-                  >
-                    <Typography color={"#a8a9b4"}>Form 1</Typography>
-                    <IconButton
-                      size="small"
-                      sx={{
-                        color: "white",
-                      }}
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                  </Box>
+                  {forms.length > 0 &&
+                    forms.map((data) => (
+                      <Box
+                        mt={2}
+                        width={"100%"}
+                        display={"flex"}
+                        justifyContent={"space-between"}
+                        alignItems={"center"}
+                        color={"white"}
+                        // bgcolor={'black'}
+                      >
+                        <Typography color={"#a8a9b4"}>{data.title}</Typography>
+                        <IconButton
+                          onClick={() => handleViewForm(data._id)}
+                          size="small"
+                          sx={{
+                            color: "white",
+                          }}
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Box>
+                    ))}
                 </Grid>
                 <Grid
                   item
@@ -692,10 +718,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                     alignItems={"center"}
                   >
                     <Typography>Work order generation</Typography>
-                  
                   </Box>
-
-                
                 </Grid>
               </Grid>
             </Grid>
