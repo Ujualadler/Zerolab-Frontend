@@ -966,6 +966,17 @@ const MapShow: React.FC = () => {
                       New School
                     </Button>
                     <Button
+                      onClick={() => setActivePipeline("spotlight")}
+                      sx={{
+                        textTransform: "none",
+                        color: "white",
+                        bgcolor:
+                          activePipeline === "spotlight" ? "#48820E" : "",
+                      }}
+                    >
+                      Spotlight
+                    </Button>
+                    <Button
                       onClick={() => setActivePipeline("upselling")}
                       sx={{
                         textTransform: "none",
@@ -1045,9 +1056,10 @@ const MapShow: React.FC = () => {
                         <GradeIcon fontSize={"small"} />
                       )}
                     </div>
+                 
                     <div
                       className="flex gap-1 items-center cursor-pointer"
-                      onClick={() => setShowTable("Closure")}
+                      onClick={() => setShowTable("hold")}
                     >
                       <PipelineProgressbar
                         title="Closure"
@@ -1055,6 +1067,19 @@ const MapShow: React.FC = () => {
                         percentage={30}
                       />
                       {showTable === "Closure" && (
+                        <GradeIcon fontSize={"small"} />
+                      )}
+                    </div>
+                    <div
+                      className="flex gap-1 items-center cursor-pointer "
+                      onClick={() => setShowTable("hold")}
+                    >
+                      <PipelineProgressbar
+                        title="hold"
+                        width={90}
+                        percentage={40}
+                      />
+                      {showTable === "hold" && (
                         <GradeIcon fontSize={"small"} />
                       )}
                     </div>
