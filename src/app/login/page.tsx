@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import dynamic from "next/dynamic";
 import React, { useEffect, useState } from "react";
@@ -12,13 +12,13 @@ const GoogleLoginBtn = dynamic(() => import("../../components/GoogleLogin"), {
 const Page: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const inviteId = searchParams.get('inviteId');  // Extract inviteId from the URL query parameters
+  const inviteId = searchParams.get("inviteId"); // Extract inviteId from the URL query parameters
   const [invite, setInvite] = useState<string | null>(null);
 
-  console.log(inviteId)
+  console.log(inviteId);
 
   useEffect(() => {
-    if (typeof inviteId === 'string') {
+    if (typeof inviteId === "string") {
       setInvite(inviteId);
     }
   }, [inviteId]);
@@ -52,3 +52,4 @@ const Page: React.FC = () => {
 };
 
 export default Page;
+

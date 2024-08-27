@@ -10,6 +10,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import the Quill CSS
 import axios from "axios";
+import { baseURL } from '../Constants/constants'; 
 
 const style = {
   position: "absolute" as "absolute",
@@ -104,7 +105,7 @@ const FormAdd: React.FC<FormAddProps> = ({ open, show }) => {
       console.log(formData);
 
       // Send a POST request to your backend API to save the form
-      const response = await axios.post("http://localhost:4000/form", formData);
+      const response = await axios.post(`${baseURL}/form`, formData);
       setFormFields([]);
       setFormTitle("");
 

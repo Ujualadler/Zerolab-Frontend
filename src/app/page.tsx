@@ -1,3 +1,5 @@
+"use client";
+
 import Layout from "@/components/Layout";
 import Loader from "@/components/Loader";
 import MapShow from "@/components/Map";
@@ -12,8 +14,8 @@ const GoogleLoginBtn = dynamic(() => import("../components/GoogleLogin"), {
 const Page: React.FC = () => {
   return (
     <Layout>
-    <MapShow />
-  </Layout>
+      <MapShow />
+    </Layout>
   );
 };
 

@@ -60,6 +60,7 @@ const menuItems: MenuTypes[] = [
   { name: "Invite Members" },
   { name: "Members" },
   { name: "Products" },
+  { name: "Competitor" },
 ];
 
 interface Feature {
@@ -286,8 +287,9 @@ const Page: React.FC = () => {
             >
               <ArrowBack />
             </IconButton>
-            {menuItems.map((data) => (
+            {menuItems.map((data, index) => (
               <Typography
+                key={index}
                 sx={{ cursor: "pointer" }}
                 onClick={() => setActive(data.name)}
                 color={activeItem === data.name ? "#4D9900" : "white"}
@@ -767,6 +769,21 @@ const Page: React.FC = () => {
                 </Grid>
               ))}
             </Grid>
+          </Grid>
+        )}
+        {activeItem === "Competitor" && (
+          <Grid item container md={10} alignContent={"start"}>
+            <Box sx={{ p: 3, width: "100%" }}>
+              <Typography
+                color={"white"}
+                fontWeight={600}
+                fontSize={"1.2rem"}
+                mb={2}
+              >
+                Competitor Details
+              </Typography>
+              <Divider sx={{ background: "white", width: "100%" }} />
+            </Box>
           </Grid>
         )}
       </Grid>

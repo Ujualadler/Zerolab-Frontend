@@ -678,8 +678,9 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                     </Button>
                   </Box>
                   {forms.length > 0 &&
-                    forms.map((data) => (
+                    forms.map((data, index) => (
                       <Box
+                        key={index}
                         mt={2}
                         width={"100%"}
                         display={"flex"}
