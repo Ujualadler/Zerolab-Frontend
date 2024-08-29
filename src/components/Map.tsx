@@ -17,6 +17,7 @@ import {
   InputAdornment,
   MenuItem,
   Select,
+  SelectChangeEvent,
   TextField,
   Tooltip,
   Typography,
@@ -32,6 +33,8 @@ import {
   ZoomOut as ZoomOutIcon,
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
+import "mapbox-gl/dist/mapbox-gl.css";
+
 import SearchIcon from "@mui/icons-material/Search";
 // import PipelineProgressbar from "./PipelineProgressBar";
 const PipelineProgressbar = dynamic(() => import("./PipelineProgressBar"), {
@@ -55,6 +58,8 @@ const KanbanBoard = dynamic(() => import("./KanbanBoard"), { ssr: false });
 import { FeatureCollection, Feature, Point, GeoJsonProperties } from "geojson";
 import dynamic from "next/dynamic";
 import LeadDetails from "./LeadDetails";
+import axios from "axios";
+import { baseURL } from "@/Constants/constants";
 
 type StudentStrength = {
   region: string;
@@ -165,17 +170,89 @@ const ROIData: ROIItemProps[] = [
   { title: "Other Overheads", value: 3000 },
 ];
 
+interface IFeature {
+  _id: string;
+  name: string;
+  price: string;
+  __v: number;
+}
+
+// Interface for Product
+interface IProduct {
+  _id: string;
+  name: string;
+  price: string;
+  features: string[]; // Array of ObjectIds referencing Features
+  __v: number;
+}
+
+// Interface for ProductDetails (within Lead)
+interface IProductDetails {
+  productId: IProduct | null; // Product can be null
+  selectedFeatures: IFeature[]; // Array of Feature objects
+  _id: string;
+}
+interface ILead {
+  _id: string;
+  phone: number;
+  mobile: number;
+  email: string;
+  status: string;
+  currentVendor: string;
+  items: any[]; // Assuming items is an array of any type
+  cordinates: number[]; // Assuming coordinates are an array of numbers [latitude, longitude]
+  leadOwner: string;
+  leadSource: string;
+  leadQuality: string;
+  client: string;
+  website: string;
+  decisionMaker: string;
+  spoc: string;
+  street: string;
+  state: string;
+  country: string;
+  dealValue: number;
+  city: string;
+  district: string;
+  zipCode: string;
+  board: string;
+  products: IProductDetails[]; // Array of ProductDetails
+  noOfStudents: number;
+  assignedTo: string;
+  assignmentDate: string;
+  __v: number;
+}
+
+interface StateType {
+  name: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+interface CoordinateType {
+  latitude: number;
+  longitude: number;
+}
+
 // Main component
 const MapShow: React.FC = () => {
   const router = useRouter();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map>();
+  const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const [activeToggle, setActiveToggle] = useState<number>(2);
   const [addLeads, setAddLeads] = useState<boolean>(false);
   const [showBoard, setShowBoard] = useState<boolean>(false);
   const [showTable, setShowTable] = useState<string>("Lead Generation");
   const [activePipeline, setActivePipeline] = useState<string>("new");
   const [showLeadDetails, setShowLeadDetails] = useState<boolean>(false);
+  const [leadData, setLeadData] = useState<ILead[]>([]);
+  const [coordinateData, setCoordinateData] = useState<CoordinateType[]>([]);
+  const [selectedState, setSelectedState] = React.useState<StateType | null>(
+    null
+  );
 
   const handleToggle = (index: number, url: string) => {
     setActiveToggle(index);
@@ -211,75 +288,351 @@ const MapShow: React.FC = () => {
     { name: "Alin", team: "Team A", amount: "17,4545", count: "50" },
   ];
 
-  const data: CompanyData[] = [
-    {
-      company: "Entab",
-      coordinates: [
-        { latitude: "25.343", longitude: "71.111" },
-        { latitude: "31.347", longitude: "75.112" },
-        { latitude: "21.348", longitude: "75.134" },
-        { latitude: "31.1471", longitude: "76.3412" },
-        { latitude: "32.1471", longitude: "77.3412" },
-        { latitude: "23.1471", longitude: "71.3412" },
-        { latitude: "24.1471", longitude: "72.3412" },
-        { latitude: "25.1471", longitude: "73.3412" },
-        { latitude: "26.1471", longitude: "76.3412" },
-        { latitude: "27.1471", longitude: "73.3412" },
-        { latitude: "24.1471", longitude: "72.3412" },
-        { latitude: "10.1632", longitude: "76.6413" },
-        { latitude: "11.8745", longitude: "75.7804" },
-        { latitude: "19.0861", longitude: "82.0188" },
-        { latitude: "26.9124", longitude: "75.7873" },
-        { latitude: "31.1048", longitude: "77.1734" },
-        { latitude: "27.2412", longitude: "79.0609" },
-        { latitude: "", longitude: "" },
-        { latitude: "", longitude: "" },
-      ],
-    },
-    {
-      company: "Next",
-      coordinates: [
-        { latitude: "24.343", longitude: "72.111" },
-        { latitude: "23.34545", longitude: "72.125" },
-        { latitude: "26.348", longitude: "75.134" },
-        { latitude: "22.7196", longitude: "75.8577" },
-        { latitude: "16.5062", longitude: "16.5062" }, // Corrected the longitude format
-        { latitude: "17.6868", longitude: "83.2185" },
-        { latitude: "19.0760", longitude: "72.8777" },
-      ],
-    },
-  ];
-
-  const geojsonData: FeatureCollection<Point, GeoJsonProperties> = {
+  //   {
+  //     company: "Entab",
+  //     coordinates: [
+  //       { latitude: "25.343", longitude: "71.111" },
+  //       { latitude: "31.347", longitude: "75.112" },
+  //       { latitude: "21.348", longitude: "75.134" },
+  //       { latitude: "31.1471", longitude: "76.3412" },
+  //       { latitude: "32.1471", longitude: "77.3412" },
+  //       { latitude: "23.1471", longitude: "71.3412" },
+  //       { latitude: "24.1471", longitude: "72.3412" },
+  //       { latitude: "25.1471", longitude: "73.3412" },
+  //       { latitude: "26.1471", longitude: "76.3412" },
+  //       { latitude: "27.1471", longitude: "73.3412" },
+  //       { latitude: "24.1471", longitude: "72.3412" },
+  //       { latitude: "10.1632", longitude: "76.6413" },
+  //       { latitude: "11.8745", longitude: "75.7804" },
+  //       { latitude: "19.0861", longitude: "82.0188" },
+  //       { latitude: "26.9124", longitude: "75.7873" },
+  //       { latitude: "31.1048", longitude: "77.1734" },
+  //       { latitude: "27.2412", longitude: "79.0609" },
+  //       { latitude: "", longitude: "" },
+  //       { latitude: "", longitude: "" },
+  //     ],
+  //   },
+  //   {
+  //     company: "Next",
+  //     coordinates: [
+  //       { latitude: "24.343", longitude: "72.111" },
+  //       { latitude: "23.34545", longitude: "72.125" },
+  //       { latitude: "26.348", longitude: "75.134" },
+  //       { latitude: "22.7196", longitude: "75.8577" },
+  //       { latitude: "16.5062", longitude: "16.5062" }, // Corrected the longitude format
+  //       { latitude: "17.6868", longitude: "83.2185" },
+  //       { latitude: "19.0760", longitude: "72.8777" },
+  //     ],
+  //   },
+  // ];
+  const [geojsonData, setGeojsonData] = useState<
+    FeatureCollection<Point, GeoJsonProperties>
+  >({
     type: "FeatureCollection",
-    features: data.flatMap((item) =>
-      item.coordinates.map((coord) => ({
+    features: [],
+  });
+
+  useEffect(() => {
+    // Update the geojsonData state whenever leadData changes
+    const updatedGeojsonData: FeatureCollection<Point, GeoJsonProperties> = {
+      type: "FeatureCollection",
+      features: leadData.map((item) => ({
         type: "Feature",
         properties: {
-          company: item.company,
+          company: item.currentVendor,
+          client: item.client,
+          count: item.noOfStudents,
+          dealValue: item.dealValue,
         },
         geometry: {
           type: "Point",
           coordinates: [
-            parseFloat(coord.longitude),
-            parseFloat(coord.latitude),
+            item.cordinates[0], // Latitude
+            item.cordinates[1], // Longitude
           ],
         },
-      }))
-    ),
-  };
+      })),
+    };
+
+    setGeojsonData(updatedGeojsonData);
+  }, [leadData]);
+
+  useEffect(() => {
+    console.log(geojsonData);
+  }, [geojsonData]);
 
   interface ProgressBarProps {
     value: number;
     text?: string;
   }
 
-  const bounds = [
-    [68.1766451354, 6.756993], // Southwest coordinates
-    [97.4025614766, 35.5087008], // Northeast coordinates
+  const stateArray: StateType[] = [
+    {
+      name: "Andhra Pradesh",
+      coordinates: {
+        latitude: 15.9129,
+        longitude: 79.74,
+      },
+    },
+    {
+      name: "Arunachal Pradesh",
+      coordinates: {
+        latitude: 28.218,
+        longitude: 94.7278,
+      },
+    },
+    {
+      name: "Assam",
+      coordinates: {
+        latitude: 26.2006,
+        longitude: 92.9376,
+      },
+    },
+    {
+      name: "Bihar",
+      coordinates: {
+        latitude: 25.0961,
+        longitude: 85.3131,
+      },
+    },
+    {
+      name: "Chhattisgarh",
+      coordinates: {
+        latitude: 21.2787,
+        longitude: 81.8661,
+      },
+    },
+    {
+      name: "Goa",
+      coordinates: {
+        latitude: 15.2993,
+        longitude: 74.124,
+      },
+    },
+    {
+      name: "Gujarat",
+      coordinates: {
+        latitude: 22.2587,
+        longitude: 71.1924,
+      },
+    },
+    {
+      name: "Haryana",
+      coordinates: {
+        latitude: 29.0588,
+        longitude: 76.0856,
+      },
+    },
+    {
+      name: "Himachal Pradesh",
+      coordinates: {
+        latitude: 31.1048,
+        longitude: 77.1734,
+      },
+    },
+    {
+      name: "Jharkhand",
+      coordinates: {
+        latitude: 23.6102,
+        longitude: 85.2799,
+      },
+    },
+    {
+      name: "Karnataka",
+      coordinates: {
+        latitude: 15.3173,
+        longitude: 75.7139,
+      },
+    },
+    {
+      name: "Kerala",
+      coordinates: {
+        latitude: 10.8505,
+        longitude: 76.2711,
+      },
+    },
+    {
+      name: "Madhya Pradesh",
+      coordinates: {
+        latitude: 22.9734,
+        longitude: 78.6569,
+      },
+    },
+    {
+      name: "Maharashtra",
+      coordinates: {
+        latitude: 19.7515,
+        longitude: 75.7139,
+      },
+    },
+    {
+      name: "Manipur",
+      coordinates: {
+        latitude: 24.6637,
+        longitude: 93.9063,
+      },
+    },
+    {
+      name: "Meghalaya",
+      coordinates: {
+        latitude: 25.467,
+        longitude: 91.3662,
+      },
+    },
+    {
+      name: "Mizoram",
+      coordinates: {
+        latitude: 23.1645,
+        longitude: 92.9376,
+      },
+    },
+    {
+      name: "Nagaland",
+      coordinates: {
+        latitude: 26.1584,
+        longitude: 94.5624,
+      },
+    },
+    {
+      name: "Odisha",
+      coordinates: {
+        latitude: 20.9517,
+        longitude: 85.0985,
+      },
+    },
+    {
+      name: "Punjab",
+      coordinates: {
+        latitude: 31.1471,
+        longitude: 75.3412,
+      },
+    },
+    {
+      name: "Rajasthan",
+      coordinates: {
+        latitude: 27.0238,
+        longitude: 74.2179,
+      },
+    },
+    {
+      name: "Sikkim",
+      coordinates: {
+        latitude: 27.533,
+        longitude: 88.5122,
+      },
+    },
+    {
+      name: "Tamil Nadu",
+      coordinates: {
+        latitude: 11.1271,
+        longitude: 78.6569,
+      },
+    },
+    {
+      name: "Telangana",
+      coordinates: {
+        latitude: 18.1124,
+        longitude: 79.0193,
+      },
+    },
+    {
+      name: "Tripura",
+      coordinates: {
+        latitude: 23.9408,
+        longitude: 91.9882,
+      },
+    },
+    {
+      name: "Uttar Pradesh",
+      coordinates: {
+        latitude: 26.8467,
+        longitude: 80.9462,
+      },
+    },
+    {
+      name: "Uttarakhand",
+      coordinates: {
+        latitude: 30.0668,
+        longitude: 79.0193,
+      },
+    },
+    {
+      name: "West Bengal",
+      coordinates: {
+        latitude: 22.9868,
+        longitude: 87.855,
+      },
+    },
+    {
+      name: "Andaman and Nicobar Islands",
+      coordinates: {
+        latitude: 11.7401,
+        longitude: 92.6586,
+      },
+    },
+    {
+      name: "Chandigarh",
+      coordinates: {
+        latitude: 30.7333,
+        longitude: 76.7794,
+      },
+    },
+    {
+      name: "Dadra and Nagar Haveli and Daman and Diu",
+      coordinates: {
+        latitude: 20.1809,
+        longitude: 73.0169,
+      },
+    },
+    {
+      name: "Lakshadweep",
+      coordinates: {
+        latitude: 10.5667,
+        longitude: 72.6411,
+      },
+    },
+    {
+      name: "Delhi",
+      coordinates: {
+        latitude: 28.7041,
+        longitude: 77.1025,
+      },
+    },
+    {
+      name: "Puducherry",
+      coordinates: {
+        latitude: 11.9416,
+        longitude: 79.8083,
+      },
+    },
   ];
 
   useEffect(() => {
+    async function getLeads() {
+      try {
+        const response = await axios.get(`${baseURL}/lead`);
+        console.log(response.data);
+        setLeadData(response.data.data);
+        // Assuming response.data.data is your leadData array
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    getLeads();
+  }, []);
+
+  console.log(leadData);
+
+  useEffect(() => {
+    // Check if geojsonData is ready
+    if (!geojsonData || geojsonData.features.length === 0) {
+      console.error("GeoJSON data is not ready or empty");
+      return; // Exit early if data is not ready
+    }
+
+    console.log("GeoJSON Data:", geojsonData); // Debugging output
+
+    // Set Mapbox access token
     mapboxgl.accessToken =
       "pk.eyJ1IjoiNzQ4NSIsImEiOiJjbDFua3kwcHIwMDE1M2luMXhleDNqMGZiIn0.Mj40f5LXER6tUfR3ygQLaA";
 
@@ -299,25 +652,69 @@ const MapShow: React.FC = () => {
       });
 
       map.addLayer({
-        id: "entab-points",
+        id: "data-points",
         type: "circle",
         source: "salesData",
         paint: {
-          "circle-radius": 10,
-          "circle-color": "#bc3a3a",
+          "circle-radius": 8,
+          "circle-color": "#fff",
         },
-        filter: ["==", ["get", "company"], "Entab"],
       });
 
-      map.addLayer({
-        id: "next-points",
-        type: "circle",
-        source: "salesData",
-        paint: {
-          "circle-radius": 10,
-          "circle-color": "#80FF00",
-        },
-        filter: ["==", ["get", "company"], "Next"],
+      // Initialize a single popup instance
+      const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 25, // Offset to place popup above the marker
+      });
+
+      // Show popup on mouseenter
+      map.on("mouseenter", "data-points", (e) => {
+        if (!e.features || !e.features[0]) return;
+
+        const feature = e.features[0];
+        if (feature.geometry.type === "Point") {
+          const coordinates = (feature.geometry as Point).coordinates.slice();
+          const company = feature.properties?.company;
+          const client = feature.properties?.client;
+          const count = feature.properties?.count;
+          const dealValue = feature.properties?.dealValue;
+
+          console.log(company);
+          console.log(coordinates);
+
+          // Set the popup content and location, then show it
+          popup
+            .setLngLat(coordinates as [number, number])
+            .setHTML(
+              `
+           <div style="
+      font-family: Arial, sans-serif; 
+      font-size: 12px; 
+      padding: 10px; 
+      max-width: 200px; 
+      background-color: #f8f9fa; /* Change background color here */
+      border-radius: 8px; /* Optional: round the corners */
+      color: #333; /* Optional: change text color */
+    ">
+      <h4 style="margin: 0; font-size: 14px;">${client}</h4>
+      <p style="margin: 5px 0;"><strong>Current Vendor:</strong> ${company}</p>
+      <p style="margin: 5px 0;"><strong>Strength:</strong> ${count}</p>
+      <p style="margin: 5px 0;"><strong>Deal Value:</strong> ₹${dealValue}</p>
+    </div>
+          `
+            )
+            .addTo(map);
+        }
+
+        // Change the cursor to a pointer when hovering over a point
+        map.getCanvas().style.cursor = "pointer";
+      });
+
+      // Remove popup on mouseleave
+      map.on("mouseleave", "data-points", () => {
+        popup.remove();
+        map.getCanvas().style.cursor = ""; // Reset cursor to default
       });
 
       map.addControl(
@@ -325,19 +722,12 @@ const MapShow: React.FC = () => {
         "top-right"
       );
 
-      // Handlers for mouse events on layers
-      map.on("mouseenter", "next-points", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-
-      map.on("mouseleave", "next-points", () => {
-        map.getCanvas().style.cursor = "";
-      });
+      mapRef.current = map;
     });
-    mapRef.current = map;
 
+    // Cleanup function to remove map instance on component unmount
     return () => map.remove();
-  }, []);
+  }, [geojsonData]);
 
   const handleZoomIn = () => {
     mapRef.current?.zoomIn();
@@ -358,6 +748,35 @@ const MapShow: React.FC = () => {
         zoom: initialZoom,
         essential: true, // This ensures the map moves even if the user has reduced motion settings
       });
+    }
+  };
+
+  const handleStateClick = (latitude: number, longitude: number) => {
+    if (mapRef.current) {
+      mapRef.current.flyTo({
+        center: [longitude, latitude], // Corrected the order to longitude, latitude
+        zoom: 6.5,
+        essential: true, // This ensures the map moves even if the user has reduced motion settings
+      });
+    }
+  };
+
+  const handleStateChange = (event: SelectChangeEvent<string>) => {
+    // Find the state object based on the selected name
+    const selectedValue =
+      stateArray.find((state) => state.name === event.target.value) || null;
+
+    if (selectedValue) {
+      // Only call handleStateClick if selectedValue is not null
+      handleStateClick(
+        selectedValue.coordinates.latitude,
+        selectedValue.coordinates.longitude
+      );
+      setSelectedState(selectedValue);
+    } else {
+      // Optionally handle the case when no state is selected or found
+      console.warn("Selected state not found");
+      setSelectedState(null);
     }
   };
 
@@ -425,7 +844,8 @@ const MapShow: React.FC = () => {
           </div>
           <div className="flex items-center mt-4 justify-around gap-1 p-4  w-[100%] ">
             <Select
-              value={"India"}
+              value={selectedState?.name || ""} // Use state name or an empty string if none selected
+              onChange={handleStateChange}
               sx={{
                 height: "30px",
                 bgcolor: "black",
@@ -435,11 +855,21 @@ const MapShow: React.FC = () => {
               IconComponent={(props) => (
                 <ArrowDropDownIcon {...props} style={{ color: "#80FF00" }} />
               )}
+              displayEmpty
             >
-              <MenuItem value="India">India</MenuItem>
-              <MenuItem value="Pakistan">Pakistan</MenuItem>
+              {/* Optionally, include a placeholder item */}
+
+              <MenuItem value="" onClick={handleResetMap}>
+                All states
+              </MenuItem>
+
+              {stateArray.map((data) => (
+                <MenuItem key={data.name} value={data.name}>
+                  {data.name}
+                </MenuItem>
+              ))}
             </Select>
-            <Select
+            {/* <Select
               value={"Student Strength"}
               sx={{
                 height: "30px",
@@ -453,9 +883,10 @@ const MapShow: React.FC = () => {
             >
               <MenuItem value="Student Strength">Student Strength</MenuItem>
               <MenuItem value="Pakistan">Pakistan</MenuItem>
-            </Select>
+            </Select> */}
             <Select
-              value={"Team A"}
+              value={"target"}
+              // label="Target"
               sx={{
                 height: "30px",
                 bgcolor: "black",
@@ -466,8 +897,9 @@ const MapShow: React.FC = () => {
                 <ArrowDropDownIcon {...props} style={{ color: "#80FF00" }} />
               )}
             >
-              <MenuItem value="Team A">Team A</MenuItem>
-              <MenuItem value="Team B">Team B</MenuItem>
+              <MenuItem value="target">Target</MenuItem>
+              <MenuItem value="closed">Closed</MenuItem>
+              <MenuItem value="notClosed">Not Closed</MenuItem>
             </Select>
           </div>
           <div className="w-[100%] flex px-4 mb-2">
@@ -529,38 +961,52 @@ const MapShow: React.FC = () => {
               },
             }}
           >
-            {studentStrengthData.map((data, index) => (
-              <>
-                <div
-                  key={index}
-                  className="p-2 flex items-center  justify-between w-[100%]"
-                >
-                  <div className="flex items-center gap-1">
-                    <Person2OutlinedIcon
-                      fontSize="small"
-                      style={{ color: "#80FF00" }}
-                    />
-                    <h6  onClick={() => setShowLeadDetails(true)} className="text-[14px] max-w-[200px] cursor-pointer">{data.region}</h6>
-                  </div>
-                  <div className="flex gap-5">
-                    <div className="flex flex-col items-start gap-1">
-                      <div className="flex  items-center gap-2">
-                        <h6 className="text-[14px] text-[#80FF00]">
-                          {data.strength}
+            {leadData.length > 0 &&
+              leadData?.map((data, index) => (
+                <>
+                  <div
+                    key={index}
+                    className="p-2 flex items-center  justify-between w-[100%]"
+                  >
+                    <div className="flex items-center gap-1">
+                      <Person2OutlinedIcon
+                        fontSize="small"
+                        style={{ color: "#80FF00" }}
+                      />
+                      <h6
+                        onClick={() => setShowLeadDetails(true)}
+                        className="text-[14px] max-w-[200px] cursor-pointer mr-3"
+                      >
+                        {data.client}
+                      </h6>
+                    </div>
+                    <div className="flex gap-5">
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="flex  items-center gap-2">
+                          <h6 className="text-[14px] text-[#80FF00]">
+                            {data?.noOfStudents}
+                          </h6>
+                          <h6 className="text-[12px] text-gray-400">
+                            Students
+                          </h6>
+                        </div>
+                        <h6 className="text-[12px] text-gray-400">
+                          {data.state}
                         </h6>
-                        <h6 className="text-[12px] text-gray-400">Students</h6>
                       </div>
-                      <h6 className="text-[12px] text-gray-400">Kerala</h6>
-                    </div>
-                    <div className="flex flex-col items-start gap-1">
-                      <h6 className="text-[13px] text-[#80FF00]">001</h6>
-                      <h6 className="text-[12px] text-gray-400">{data.team}</h6>
+                      <div className="flex flex-col items-start gap-1">
+                        <h6 className="text-[13px] text-[#80FF00]">
+                          ₹{data?.dealValue}
+                        </h6>
+                        <h6 className="text-[12px] text-gray-400">
+                          Deal Value
+                        </h6>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <Divider className="bg-gray-500" />
-              </>
-            ))}
+                  <Divider className="bg-gray-500" />
+                </>
+              ))}
           </Box>
         </div>
         {/* left section */}
@@ -1056,7 +1502,7 @@ const MapShow: React.FC = () => {
                         <GradeIcon fontSize={"small"} />
                       )}
                     </div>
-                 
+
                     <div
                       className="flex gap-1 items-center cursor-pointer"
                       onClick={() => setShowTable("hold")}
@@ -1079,9 +1525,7 @@ const MapShow: React.FC = () => {
                         width={90}
                         percentage={40}
                       />
-                      {showTable === "hold" && (
-                        <GradeIcon fontSize={"small"} />
-                      )}
+                      {showTable === "hold" && <GradeIcon fontSize={"small"} />}
                     </div>
                     <div
                       className="flex gap-1 items-center cursor-pointer "

@@ -21,6 +21,7 @@ import {
 import axios from "axios";
 import { baseURL } from "@/Constants/constants";
 import { ArrowDownward, ArrowDropDown, Business } from "@mui/icons-material";
+import { da } from "date-fns/locale";
 
 const Transition = React.forwardRef(function Transition(
   props: SlideProps & { children: React.ReactElement },
@@ -38,8 +39,25 @@ interface dropDownType {
   title: string;
 }
 
+interface IFeature {
+  _id: string; // Include _id as ObjectId type (or string if using string IDs)
+  name: string;
+  price: string;
+}
+
+interface Product {
+  _id?: string;
+  name: string;
+  price: string;
+  features: IFeature[];
+}
+
+interface States {
+  name: string;
+  state_code: string;
+}
+
 const dropDownData: dropDownType[] = [
-  { title: "Business Type" },
   { title: "Lead Details" },
   { title: "Additional Information" },
   { title: "Assignment Information" },
@@ -55,24 +73,78 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
 
   const [activetoggle, setActiveToggle] =
     React.useState<string>("Lead Details");
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [states, setStates] = React.useState<States[]>([]);
+
   const [showNewVendorField, setShowNewVendorField] =
     React.useState<boolean>(false);
   const [showBusinessType, setShowBusinessType] = React.useState<boolean>(true);
+  const [selectedProduct, setSelectedProduct] = React.useState<Product[]>([]);
 
   const handleAddVendorClick = () => {
     setShowNewVendorField(true);
   };
 
+  React.useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(`${baseURL}/product`);
+        const fetchedProducts = response.data;
+        setProducts(fetchedProducts);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  React.useEffect(() => {
+    async function fetchCountry() {
+      try {
+        const response = await axios.post(
+          "https://countriesnow.space/api/v0.1/countries/states",
+          { country: "India" }
+        );
+        setStates(response.data.data.states);
+        console.log(response.data.data.states);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    fetchCountry();
+  }, []);
+
+  console.log(products);
+
+  const index = dropDownData.findIndex((data) => data.title === activetoggle);
+
+  console.log(index);
+
+  const handleProductSelection = () => {};
+
+  const handleNextClick = () => {
+    const index = dropDownData.findIndex((data) => data.title === activetoggle);
+    if (index === dropDownData.length - 1) {
+      setActiveToggle(dropDownData[0].title);
+    } else {
+      setActiveToggle(dropDownData[index + 1].title);
+    }
+  };
+
   const [formData, setFormData] = React.useState({
     leadOwner: "",
     leadSource: "",
+    dealValue: "",
     leadQuality: "",
     client: "",
     clientType: "",
     industryType: "",
     board: "",
     website: "",
-    products: [] as string[],
+    products: [] as string[], // Array to hold selected product IDs
+    selectedFeatures: {} as Record<string, string[]>,
     currentVendor: "",
     noOfStudents: "",
     spoc: "",
@@ -81,10 +153,8 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
     mobile: "",
     street: "",
     state: "",
-    stateType: "",
     country: "",
     city: "",
-    otherDistrict: "",
     district: "",
     zipCode: "",
     assignedTo: "",
@@ -117,25 +187,41 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
 
   const handleSelectChange = (event: SelectChangeEvent<string[] | string>) => {
     const { name, value } = event.target;
-    console.log(name,value)
+    console.log(name, value);
     setFormData({
       ...formData,
       [name]: value as string[] | string,
     });
-
-    if(name==='clientType' && value==='individual'){
-      setShowBusinessType(false)
-    }
   };
 
   const handleMultipleSelectChange = (event: SelectChangeEvent<string[]>) => {
     const { name, value } = event.target;
+
+    console.log(name, value);
+
+    const selectedproduct = products.filter((data) => value[0] === data._id);
+
+    setSelectedProduct(selectedproduct);
+
+    console.log(selectedProduct);
     setFormData({
       ...formData,
       [name]: value as string[],
     });
   };
+  // Log the filtered products to check what you are getting
+
   const handleSubmit = async () => {
+    console.log(formData.products.filter((data) => data !== undefined));
+
+    // Create a new filtered products array
+    const newProducts = formData.products.filter((data) => data !== undefined);
+
+    // Update the formData with the new products array
+    setFormData({
+      ...formData, // Spread the current formData state
+      products: newProducts, // Update the products field with the filtered array
+    });
     console.log(formData);
 
     try {
@@ -212,6 +298,81 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
     setShowNewVendorField(!showNewVendorField);
   };
 
+  const handleProductSelectChange = (productId: string) => {
+    setFormData((prevFormData) => {
+      const isSelected = prevFormData.products.includes(productId);
+      let updatedProducts = [...prevFormData.products];
+
+      console.log(prevFormData.products);
+
+      let updatedSelectedFeatures = { ...prevFormData.selectedFeatures }; // Copy current selected features
+
+      if (isSelected) {
+        // Deselect the product: remove it and its features
+        updatedProducts = updatedProducts.filter((id) => id !== productId); // Remove the selected product ID
+        delete updatedSelectedFeatures[productId]; // Remove associated features
+      } else {
+        // Select the product: add it and its features
+        updatedProducts.push(productId); // Safely add the product ID to the array
+
+        const productFeatures =
+          products
+            .find((p) => p._id === productId)
+            ?.features.map((f) => f._id) || []; // Safely map features
+
+        updatedSelectedFeatures[productId] = productFeatures;
+      }
+
+      // Remove all undefined values from the updatedProducts array
+      updatedProducts = updatedProducts.filter((data) => data !== undefined);
+
+      console.log("Updated Products:", updatedProducts);
+      console.log("Updated Selected Features:", updatedSelectedFeatures);
+
+      // Return the updated state
+      return {
+        ...prevFormData,
+        products: updatedProducts,
+        selectedFeatures: updatedSelectedFeatures,
+      };
+    });
+  };
+
+  console.log(formData);
+  const handleFeatureSelectChange = (productId: string, featureId: string) => {
+    setFormData((prevFormData) => {
+      const currentFeatures = prevFormData.selectedFeatures[productId] || [];
+      const isSelected = currentFeatures.includes(featureId);
+
+      // Update features based on selection/deselection
+      const updatedFeatures = isSelected
+        ? currentFeatures.filter((id) => id !== featureId)
+        : [...currentFeatures, featureId];
+
+      console.log(prevFormData);
+
+      // Filter out any undefined values from the products array
+      const filteredProducts = prevFormData.products.filter(
+        (product) => product !== undefined
+      );
+
+      // If a product has no selected features after the update, remove it from the products array
+      const updatedSelectedFeatures = { ...prevFormData.selectedFeatures };
+      if (updatedFeatures.length === 0) {
+        delete updatedSelectedFeatures[productId]; // Remove the product from selectedFeatures if no features are selected
+      } else {
+        updatedSelectedFeatures[productId] = updatedFeatures; // Update the product's selected features
+      }
+
+      // Update the formData state
+      return {
+        ...prevFormData,
+        products: filteredProducts,
+        selectedFeatures: updatedSelectedFeatures,
+      };
+    });
+  };
+
   return (
     <React.Fragment>
       <Dialog
@@ -244,7 +405,9 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
             width={"100%"}
             position={"fixed"}
             zIndex={10000000}
-            sx={{background: "linear-gradient(180deg, #011719 0%, #03292C 100%)"}}
+            sx={{
+              background: "linear-gradient(180deg, #011719 0%, #03292C 100%)",
+            }}
             mb={{ xs: 2, sm: 0 }}
             p={3}
           >
@@ -260,7 +423,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
             </IconButton>
           </Box>
 
-          <Grid container p={4} mt={6}>
+          <Grid container px={10} mt={10}>
             <Grid item xs={12}>
               <Box display={"flex"} alignItems={"center"}>
                 <h1 className="ml-5 py-3 pl-3 text-white font-semibold text-lg">
@@ -283,7 +446,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
             </Grid>
             {showBusinessType && (
               <>
-                <Grid item md={6} px={4} spacing={3}>
+                <Grid item md={4} px={4} spacing={3}>
                   <FormControl fullWidth sx={selectStyle}>
                     <InputLabel id="demo-simple-select-label">
                       Client Type
@@ -300,6 +463,8 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                       <MenuItem value={"individual"}>Individual</MenuItem>
                     </Select>
                   </FormControl>
+                </Grid>
+                <Grid item md={4} px={4} spacing={3}>
                   <Box display={"flex"} justifyContent={"space-between"}>
                     <TextField
                       fullWidth
@@ -312,7 +477,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                     />
                   </Box>
                 </Grid>
-                <Grid item md={6} px={4} spacing={3}>
+                <Grid item md={4} px={4} spacing={3}>
                   <FormControl fullWidth sx={selectStyle}>
                     <InputLabel id="demo-simple-select-label">
                       Industry Type
@@ -334,7 +499,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
             )}
           </Grid>
           {formData.clientType === "individual" && (
-            <Grid container px={4} >
+            <Grid container px={4}>
               <Grid
                 item
                 md={2}
@@ -461,7 +626,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                   item
                   container
                   xs={12}
-                  maxHeight={"60vh"}
+                  height={"calc(var(--vh, 1vh) * 45)"}
                   overflow={"auto"}
                   alignContent={"start"}
                   sx={{
@@ -544,33 +709,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                             <MenuItem value={"Other"}>Other</MenuItem>
                           </Select>
                         </FormControl>
-                        <FormControl fullWidth sx={selectStyle}>
-                          <InputLabel id="demo-simple-select-label">
-                            Industry Type
-                          </InputLabel>
-                          <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            name="industryType"
-                            value={formData.industryType}
-                            onChange={handleSelectChange}
-                            label="Industry Type"
-                          >
-                            <MenuItem value={"group"}>Group</MenuItem>
-                            <MenuItem value={"individual"}>Individual</MenuItem>
-                          </Select>
-                        </FormControl>
-                        <Box display={"flex"} justifyContent={"space-between"}>
-                          <TextField
-                            fullWidth
-                            type="text"
-                            label="Client"
-                            name="client"
-                            value={formData.client}
-                            onChange={handleInputChange}
-                            sx={{ ...textFieldStyle }}
-                          />
-                        </Box>
+
                         {/* <TextField
                         fullWidth
                         type="text"
@@ -600,8 +739,15 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                                 },
                               }}
                             >
-                              <MenuItem value={"Alin Anto"}>Vendor 1</MenuItem>
-                              <MenuItem value={"Jissmon"}>Vendor 2</MenuItem>
+                              <MenuItem value={"Extramarks"}>
+                                Extramarks
+                              </MenuItem>
+                              <MenuItem value={"Next Education"}>
+                                Next Education
+                              </MenuItem>
+                              <MenuItem value={"Tata ClassEdge"}>
+                                Tata ClassEdge
+                              </MenuItem>
                               <MenuItem>
                                 <Button
                                   onClick={handleButtonClick}
@@ -656,22 +802,70 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                             value={formData.products}
                             onChange={handleMultipleSelectChange}
                             renderValue={(selected) =>
-                              (selected as string[]).join(", ")
+                              (selected as string[])
+                                .map((id) => {
+                                  const product = products.find(
+                                    (p) => p._id === id
+                                  );
+                                  return product ? product.name : "";
+                                })
+                                .join(", ")
                             }
                             label="Products"
                           >
-                            {productList.map((product) => (
-                              <MenuItem key={product} value={product}>
-                                <Checkbox
-                                  checked={
-                                    formData.products.indexOf(product) > -1
-                                  }
-                                />
-                                <ListItemText primary={product} />
-                              </MenuItem>
+                            {products.map((product) => (
+                              <div key={product._id}>
+                                {/* Product Menu Item */}
+                                <MenuItem value={product._id}>
+                                  <Checkbox
+                                    checked={formData.products.includes(
+                                      product._id ?? ""
+                                    )} // Using ?? to provide a default value
+                                    onChange={() =>
+                                      handleProductSelectChange(
+                                        product._id ?? ""
+                                      )
+                                    } // Providing a default value if undefined
+                                  />
+                                  <ListItemText primary={product.name} />
+                                </MenuItem>
+
+                                {/* Display features if the product is selected */}
+                                {formData.products.includes(
+                                  product._id ?? ""
+                                ) &&
+                                  product.features.map((feature) => (
+                                    <MenuItem key={feature._id} sx={{ pl: 4 }}>
+                                      <Checkbox
+                                        checked={
+                                          formData.selectedFeatures[
+                                            product._id ?? ""
+                                          ]?.includes(feature._id ?? "") ||
+                                          false
+                                        }
+                                        onChange={() =>
+                                          handleFeatureSelectChange(
+                                            product._id ?? "",
+                                            feature._id ?? ""
+                                          )
+                                        }
+                                      />
+                                      <ListItemText primary={feature.name} />
+                                    </MenuItem>
+                                  ))}
+                              </div>
                             ))}
                           </Select>
                         </FormControl>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Deal Value"
+                          name="dealValue"
+                          value={formData.dealValue}
+                          onChange={handleInputChange}
+                          sx={{ ...textFieldStyle }}
+                        />
                       </Grid>
                       <Grid item md={6} px={4} spacing={3}>
                         <TextField
@@ -770,32 +964,15 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                             onChange={handleSelectChange}
                             label="State"
                           >
-                            <MenuItem value={"Kerala"}>Kerala</MenuItem>
-                            <MenuItem value={"Tamil Nadu"}>Tamil Nadu</MenuItem>
-                            <MenuItem value={"Karnataka"}>Karnataka</MenuItem>
-                            <MenuItem value={"Other"}>Other</MenuItem>
+                            {states.length > 0 &&
+                              states.map((data, index) => (
+                                <MenuItem key={index} value={data.name}>
+                                  {data.name}
+                                </MenuItem>
+                              ))}
                           </Select>
                         </FormControl>
-                        <FormControl fullWidth sx={selectStyle}>
-                          <InputLabel id="demo-simple-select-label">
-                            State Type
-                          </InputLabel>
-                          <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            name="stateType"
-                            value={formData.stateType}
-                            onChange={handleSelectChange}
-                            label="State Type"
-                          >
-                            <MenuItem value={"Inside Sales"}>
-                              Inside Sales
-                            </MenuItem>
-                            <MenuItem value={"Sales"}>Sales</MenuItem>
-                            <MenuItem value={"Website"}>Website</MenuItem>
-                            <MenuItem value={"Other"}>Other</MenuItem>
-                          </Select>
-                        </FormControl>
+
                         <FormControl fullWidth sx={selectStyle}>
                           <InputLabel id="demo-simple-select-label">
                             Country
@@ -809,9 +986,6 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                             label="Country"
                           >
                             <MenuItem value={"India"}>India</MenuItem>
-                            <MenuItem value={"USA"}>USA</MenuItem>
-                            <MenuItem value={"UK"}>UK</MenuItem>
-                            <MenuItem value={"Australia"}>Australia</MenuItem>
                           </Select>
                         </FormControl>
                       </Grid>
@@ -822,15 +996,6 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                           label="City"
                           name="city"
                           value={formData.city}
-                          onChange={handleInputChange}
-                          sx={textFieldStyle}
-                        />
-                        <TextField
-                          fullWidth
-                          type="text"
-                          label="Other District"
-                          name="otherDistrict"
-                          value={formData.otherDistrict}
                           onChange={handleInputChange}
                           sx={textFieldStyle}
                         />
@@ -902,7 +1067,8 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                   item
                   xs={12}
                   display="flex"
-                  mt={1}
+                  mt={3}
+                  gap={1}
                   justifyContent="center"
                 >
                   <Button
@@ -916,6 +1082,18 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                     }}
                   >
                     Save
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleNextClick}
+                    sx={{
+                      backgroundColor: "#4D9900",
+                      color: "white",
+                      borderRadius: 3,
+                    }}
+                  >
+                    Next
                   </Button>
                 </Grid>
               </Grid>
@@ -1057,32 +1235,39 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                   pt={2}
                   // borderBottom={"1px dashed #8B8B8B"}
                 >
-                  <Box sx={{ color: "white" }}>
-                    <Typography fontSize={"15px"}>Products</Typography>
-                    <Box display={"flex"} gap={"1px"}>
-                      {formData.products.length > 0 ? (
-                        formData.products.map((pdts, index) => (
+                  <Box display={"flex"} gap={"1px"}>
+                    {formData.products.length > 0 ? (
+                      formData.products.map((pdts, index) => {
+                        const product = products.find((p) => p._id === pdts); // Find the product by ID
+
+                        return (
                           <Typography
                             key={index}
                             fontSize={"15px"}
                             color={"#4D9900"}
                           >
-                            {pdts},
+                            {product && product.name},{" "}
+                            {/* Display product name */}
                           </Typography>
-                        ))
-                      ) : (
-                        <Typography color={"red"} fontSize={"15px"}>
-                          Not Selected
-                        </Typography>
-                      )}
-                    </Box>
+                        );
+                      })
+                    ) : (
+                      <Typography color={"red"} fontSize={"15px"}>
+                        Not Selected
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               </Grid>
             </Grid>
           )}
           {formData.clientType === "parent" && (
-            <Grid>
+            <Grid
+              height={"50vh"}
+              display={"flex"}
+              justifyContent={"center"}
+              alignItems={"center"}
+            >
               <Typography
                 textAlign={"center"}
                 fontSize={"1.5rem"}

@@ -64,3 +64,15 @@ body {
     text-wrap: balance;
   }
 }
+
+
+.mapbox-custom-popup {
+  background-color: #f8f9fa; /* Your desired background color */
+  color: #333; /* Text color */
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  padding: 10px;
+  max-width: 200px;
+  border-radius: 8px; /* Optional: round the corners */
+}
+
