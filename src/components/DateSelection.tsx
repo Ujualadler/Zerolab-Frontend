@@ -8,11 +8,12 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 interface DateSelectionProps {
   dates: { startDate: Date; endDate: Date; key: string };
   setDates: (dates: { startDate: Date; endDate: Date; key: string }) => void;
+  mainDate?:any
 }
 
-const DateSelection: FC<DateSelectionProps> = ({ dates, setDates }) => {
+const DateSelection: FC<DateSelectionProps> = ({ dates, setDates,mainDate}) => {
   const [assignmentCalendar, setAssignmentCalendar] = useState(false);
-  const [dateOption, setDateOption] = useState("last6Months");
+  const [dateOption, setDateOption] = useState("lastYear");
 
   const formatDate = (dateString: Date): string => {
     const date = new Date(dateString);
@@ -59,6 +60,7 @@ const DateSelection: FC<DateSelectionProps> = ({ dates, setDates }) => {
           setDates={setDates}
           dateOption={dateOption}
           setDateOption={setDateOption}
+    
         />
       )}
     </Box>

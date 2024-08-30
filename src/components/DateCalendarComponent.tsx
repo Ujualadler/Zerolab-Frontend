@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 
 import { DateRange } from "react-date-range";
-import { subDays, subMonths } from "date-fns";
+import { endOfMonth, subDays, subMonths } from "date-fns";
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css";
 import Close from "@mui/icons-material/Close";
@@ -31,6 +31,7 @@ const DateCalendarComponent: FC<DateCalendarComponentProps> = ({
   dates,
   setDates,
   dateOption,
+
   setDateOption,
 }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -58,61 +59,47 @@ const DateCalendarComponent: FC<DateCalendarComponentProps> = ({
     zIndex: 300,
   };
 
+  // Handler function to handle date range changes
   const handleChange = (event: SelectChangeEvent<string>) => {
     const option = event.target.value as string;
     setDateOption(option);
+
     const today = new Date();
+    let startDate: Date;
+    let endDate: Date = endOfMonth(today); // Default end date is the end of the current month
+
     switch (option) {
-      case "today":
-        setDates({ startDate: today, endDate: today, key: "selection" });
-        break;
-      case "yesterday":
-        const yesterday = subDays(today, 1);
-        setDates({
-          startDate: yesterday,
-          endDate: yesterday,
-          key: "selection",
-        });
-        break;
-      case "last7days":
-        setDates({
-          startDate: subDays(today, 6),
-          endDate: today,
-          key: "selection",
-        });
-        break;
       case "lastMonth":
-        const startLastMonth = subMonths(today, 1);
-        startLastMonth.setDate(1); // Set to the first day of last month
-        const endLastMonth = new Date(
-          startLastMonth.getFullYear(),
-          startLastMonth.getMonth() + 1,
-          0
-        ); // Last day of last month
-        setDates({
-          startDate: startLastMonth,
-          endDate: endLastMonth,
-          key: "selection",
-        });
+        startDate = subMonths(today, 1);
+        startDate.setDate(1); // First day of last month
+        endDate = endOfMonth(today); // Last day of last month
+        break;
+      case "last3Months":
+        startDate = subMonths(today, 3);
+        startDate.setDate(1); // First day of the month three months ago
+        endDate = endOfMonth(today); // End of the current month
         break;
       case "last6Months":
-        const startLast6Months = subMonths(today, 6);
-        startLast6Months.setDate(1); // Set to the first day of 6 months ago
-        const endLast6Months = new Date(
-          today.getFullYear(),
-          today.getMonth() + 1,
-          0
-        ); // End of the current month
-        setDates({
-          startDate: startLast6Months,
-          endDate: endLast6Months,
-          key: "selection",
-        });
+        startDate = subMonths(today, 6);
+        startDate.setDate(1); // First day of the month six months ago
+        endDate = endOfMonth(today); // End of the current month
+        break;
+      case "lastYear":
+        startDate = subMonths(today, 12);
+        startDate.setDate(1); // First day of the month twelve months ago
+        endDate = endOfMonth(today); // End of the current month
         break;
       case "custom":
-        // do not update dates here to let the user select custom range
-        break;
+        return; // Don't update dates, let the user select a custom range
+      default:
+        return; // No action for unexpected cases
     }
+
+    setDates({
+      startDate,
+      endDate,
+      key: "selection",
+    });
   };
 
   return (
@@ -135,11 +122,10 @@ const DateCalendarComponent: FC<DateCalendarComponentProps> = ({
         placeholder="select date"
         onChange={handleChange}
       >
-        <MenuItem value="today">Today</MenuItem>
-        <MenuItem value="yesterday">Yesterday</MenuItem>
-        <MenuItem value="last7days">Last 7 Days</MenuItem>
         <MenuItem value="lastMonth">Last Month</MenuItem>
+        <MenuItem value="last3Months">Last 3 Months</MenuItem>
         <MenuItem value="last6Months">Last 6 Months</MenuItem>
+        <MenuItem value="lastYear">Last Year</MenuItem>
         <MenuItem value="custom">Custom Date</MenuItem>
       </Select>
       {dateOption === "custom" && (

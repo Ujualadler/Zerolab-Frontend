@@ -161,6 +161,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
     assignmentDate: "",
     decisionMaker: "",
     status: "pending",
+    leadStatus: "Lead Generation",
   });
 
   console.log(formData);

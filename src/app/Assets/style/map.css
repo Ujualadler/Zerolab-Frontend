@@ -1,0 +1,20 @@
+
+
+.mapboxgl-popup-content {
+  background: #68ac25;
+  border-radius: 10px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #68ac25;
+  
+}
+
+.mapboxgl-popup-content div {
+    padding:0em;
+
+}
+
+.mapboxgl-popup-content-wrapper {
+  display: block;
+}
+

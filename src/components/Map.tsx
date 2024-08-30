@@ -34,6 +34,7 @@ import {
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import "mapbox-gl/dist/mapbox-gl.css";
+import "../app/Assets/style/map.css";
 
 import SearchIcon from "@mui/icons-material/Search";
 // import PipelineProgressbar from "./PipelineProgressBar";
@@ -60,6 +61,7 @@ import dynamic from "next/dynamic";
 import LeadDetails from "./LeadDetails";
 import axios from "axios";
 import { baseURL } from "@/Constants/constants";
+import { fetchLeads } from "@/Service/services";
 
 type StudentStrength = {
   region: string;
@@ -209,6 +211,7 @@ interface ILead {
   decisionMaker: string;
   spoc: string;
   street: string;
+  leadStatus: string;
   state: string;
   country: string;
   dealValue: number;
@@ -236,50 +239,324 @@ interface CoordinateType {
   longitude: number;
 }
 
+interface ProgressBarProps {
+  value: number;
+  text?: string;
+}
+
+const stateArray: StateType[] = [
+  {
+    name: "Andhra Pradesh",
+    coordinates: {
+      latitude: 15.9129,
+      longitude: 79.74,
+    },
+  },
+  {
+    name: "Arunachal Pradesh",
+    coordinates: {
+      latitude: 28.218,
+      longitude: 94.7278,
+    },
+  },
+  {
+    name: "Assam",
+    coordinates: {
+      latitude: 26.2006,
+      longitude: 92.9376,
+    },
+  },
+  {
+    name: "Bihar",
+    coordinates: {
+      latitude: 25.0961,
+      longitude: 85.3131,
+    },
+  },
+  {
+    name: "Chhattisgarh",
+    coordinates: {
+      latitude: 21.2787,
+      longitude: 81.8661,
+    },
+  },
+  {
+    name: "Goa",
+    coordinates: {
+      latitude: 15.2993,
+      longitude: 74.124,
+    },
+  },
+  {
+    name: "Gujarat",
+    coordinates: {
+      latitude: 22.2587,
+      longitude: 71.1924,
+    },
+  },
+  {
+    name: "Haryana",
+    coordinates: {
+      latitude: 29.0588,
+      longitude: 76.0856,
+    },
+  },
+  {
+    name: "Himachal Pradesh",
+    coordinates: {
+      latitude: 31.1048,
+      longitude: 77.1734,
+    },
+  },
+  {
+    name: "Jharkhand",
+    coordinates: {
+      latitude: 23.6102,
+      longitude: 85.2799,
+    },
+  },
+  {
+    name: "Karnataka",
+    coordinates: {
+      latitude: 15.3173,
+      longitude: 75.7139,
+    },
+  },
+  {
+    name: "Kerala",
+    coordinates: {
+      latitude: 10.8505,
+      longitude: 76.2711,
+    },
+  },
+  {
+    name: "Madhya Pradesh",
+    coordinates: {
+      latitude: 22.9734,
+      longitude: 78.6569,
+    },
+  },
+  {
+    name: "Maharashtra",
+    coordinates: {
+      latitude: 19.7515,
+      longitude: 75.7139,
+    },
+  },
+  {
+    name: "Manipur",
+    coordinates: {
+      latitude: 24.6637,
+      longitude: 93.9063,
+    },
+  },
+  {
+    name: "Meghalaya",
+    coordinates: {
+      latitude: 25.467,
+      longitude: 91.3662,
+    },
+  },
+  {
+    name: "Mizoram",
+    coordinates: {
+      latitude: 23.1645,
+      longitude: 92.9376,
+    },
+  },
+  {
+    name: "Nagaland",
+    coordinates: {
+      latitude: 26.1584,
+      longitude: 94.5624,
+    },
+  },
+  {
+    name: "Odisha",
+    coordinates: {
+      latitude: 20.9517,
+      longitude: 85.0985,
+    },
+  },
+  {
+    name: "Punjab",
+    coordinates: {
+      latitude: 31.1471,
+      longitude: 75.3412,
+    },
+  },
+  {
+    name: "Rajasthan",
+    coordinates: {
+      latitude: 27.0238,
+      longitude: 74.2179,
+    },
+  },
+  {
+    name: "Sikkim",
+    coordinates: {
+      latitude: 27.533,
+      longitude: 88.5122,
+    },
+  },
+  {
+    name: "Tamil Nadu",
+    coordinates: {
+      latitude: 11.1271,
+      longitude: 78.6569,
+    },
+  },
+  {
+    name: "Telangana",
+    coordinates: {
+      latitude: 18.1124,
+      longitude: 79.0193,
+    },
+  },
+  {
+    name: "Tripura",
+    coordinates: {
+      latitude: 23.9408,
+      longitude: 91.9882,
+    },
+  },
+  {
+    name: "Uttar Pradesh",
+    coordinates: {
+      latitude: 26.8467,
+      longitude: 80.9462,
+    },
+  },
+  {
+    name: "Uttarakhand",
+    coordinates: {
+      latitude: 30.0668,
+      longitude: 79.0193,
+    },
+  },
+  {
+    name: "West Bengal",
+    coordinates: {
+      latitude: 22.9868,
+      longitude: 87.855,
+    },
+  },
+  {
+    name: "Andaman and Nicobar Islands",
+    coordinates: {
+      latitude: 11.7401,
+      longitude: 92.6586,
+    },
+  },
+  {
+    name: "Chandigarh",
+    coordinates: {
+      latitude: 30.7333,
+      longitude: 76.7794,
+    },
+  },
+  {
+    name: "Dadra and Nagar Haveli and Daman and Diu",
+    coordinates: {
+      latitude: 20.1809,
+      longitude: 73.0169,
+    },
+  },
+  {
+    name: "Lakshadweep",
+    coordinates: {
+      latitude: 10.5667,
+      longitude: 72.6411,
+    },
+  },
+  {
+    name: "Delhi",
+    coordinates: {
+      latitude: 28.7041,
+      longitude: 77.1025,
+    },
+  },
+  {
+    name: "Puducherry",
+    coordinates: {
+      latitude: 11.9416,
+      longitude: 79.8083,
+    },
+  },
+];
+
+interface DateRange {
+  startDate: Date;
+  endDate: Date;
+  key: string;
+}
+
+type topPerformanceType = {
+  name: string;
+  team: string;
+  amount: string;
+  count: string;
+};
+
+type QueryParams = {
+  from: Date; // Changed from string to Date
+  to: Date; // Changed from string to Date
+  state: string;
+  status: string;
+  strength: string;
+  dealValue: string;
+};
+
 // Main component
 const MapShow: React.FC = () => {
   const router = useRouter();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map>();
-  const [mapLoaded, setMapLoaded] = useState<boolean>(false);
   const [activeToggle, setActiveToggle] = useState<number>(2);
   const [addLeads, setAddLeads] = useState<boolean>(false);
   const [showBoard, setShowBoard] = useState<boolean>(false);
   const [showTable, setShowTable] = useState<string>("Lead Generation");
   const [activePipeline, setActivePipeline] = useState<string>("new");
   const [showLeadDetails, setShowLeadDetails] = useState<boolean>(false);
+  const [strengthFilter, setStrengthFilter] = useState<boolean>(false);
+  const [dealValueFilter, setDealValueFilter] = useState<boolean>(false);
+  const [targetFilter, setTargetFilter] = useState<string>("");
   const [leadData, setLeadData] = useState<ILead[]>([]);
-  const [coordinateData, setCoordinateData] = useState<CoordinateType[]>([]);
+  const [targetCounts, setTargetCounts] = useState<any>({});
+  const [targetValue, setTargetValue] = useState<any>({});
   const [selectedState, setSelectedState] = React.useState<StateType | null>(
     null
   );
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const [circularDate, setCircularDate] = useState<DateRange>({
+    startDate: new Date(new Date().setMonth(new Date().getMonth() - 6)),
+    endDate: new Date(),
+    key: "selection",
+  });
+  const [mainDate, setMainDate] = useState<DateRange>({
+    startDate: new Date(new Date().setMonth(new Date().getMonth() - 12)),
+    endDate: new Date(),
+    key: "selection",
+  });
+
+  const [queryParams, setQueryParams] = useState<QueryParams>({
+    from: mainDate.startDate, // Set as Date object
+    to: mainDate.endDate, // Set as Date object
+    state: "",
+    status: "",
+    strength: "down",
+    dealValue: "down",
+  });
 
   const handleToggle = (index: number, url: string) => {
     setActiveToggle(index);
     router.push(url);
   };
 
-  interface DateRange {
-    startDate: Date;
-    endDate: Date;
-    key: string;
-  }
-
   // Initialize the state with proper typing
-  const [circularDate, setCircularDate] = useState<DateRange>({
-    startDate: new Date(new Date().setMonth(new Date().getMonth() - 6)),
-    endDate: new Date(),
-    key: "selection",
-  });
 
   // Define your data with type annotation
-
-  type topPerformanceType = {
-    name: string;
-    team: string;
-    amount: string;
-    count: string;
-  };
 
   const topPerformamnceData: topPerformanceType[] = [
     { name: "Alin", team: "Team A", amount: "17,4545", count: "50" },
@@ -333,306 +610,30 @@ const MapShow: React.FC = () => {
   });
 
   useEffect(() => {
-    // Update the geojsonData state whenever leadData changes
-    const updatedGeojsonData: FeatureCollection<Point, GeoJsonProperties> = {
-      type: "FeatureCollection",
-      features: leadData.map((item) => ({
-        type: "Feature",
-        properties: {
-          company: item.currentVendor,
-          client: item.client,
-          count: item.noOfStudents,
-          dealValue: item.dealValue,
-        },
-        geometry: {
-          type: "Point",
-          coordinates: [
-            item.cordinates[0], // Latitude
-            item.cordinates[1], // Longitude
-          ],
-        },
-      })),
-    };
-
-    setGeojsonData(updatedGeojsonData);
-  }, [leadData]);
-
-  useEffect(() => {
-    console.log(geojsonData);
-  }, [geojsonData]);
-
-  interface ProgressBarProps {
-    value: number;
-    text?: string;
-  }
-
-  const stateArray: StateType[] = [
-    {
-      name: "Andhra Pradesh",
-      coordinates: {
-        latitude: 15.9129,
-        longitude: 79.74,
-      },
-    },
-    {
-      name: "Arunachal Pradesh",
-      coordinates: {
-        latitude: 28.218,
-        longitude: 94.7278,
-      },
-    },
-    {
-      name: "Assam",
-      coordinates: {
-        latitude: 26.2006,
-        longitude: 92.9376,
-      },
-    },
-    {
-      name: "Bihar",
-      coordinates: {
-        latitude: 25.0961,
-        longitude: 85.3131,
-      },
-    },
-    {
-      name: "Chhattisgarh",
-      coordinates: {
-        latitude: 21.2787,
-        longitude: 81.8661,
-      },
-    },
-    {
-      name: "Goa",
-      coordinates: {
-        latitude: 15.2993,
-        longitude: 74.124,
-      },
-    },
-    {
-      name: "Gujarat",
-      coordinates: {
-        latitude: 22.2587,
-        longitude: 71.1924,
-      },
-    },
-    {
-      name: "Haryana",
-      coordinates: {
-        latitude: 29.0588,
-        longitude: 76.0856,
-      },
-    },
-    {
-      name: "Himachal Pradesh",
-      coordinates: {
-        latitude: 31.1048,
-        longitude: 77.1734,
-      },
-    },
-    {
-      name: "Jharkhand",
-      coordinates: {
-        latitude: 23.6102,
-        longitude: 85.2799,
-      },
-    },
-    {
-      name: "Karnataka",
-      coordinates: {
-        latitude: 15.3173,
-        longitude: 75.7139,
-      },
-    },
-    {
-      name: "Kerala",
-      coordinates: {
-        latitude: 10.8505,
-        longitude: 76.2711,
-      },
-    },
-    {
-      name: "Madhya Pradesh",
-      coordinates: {
-        latitude: 22.9734,
-        longitude: 78.6569,
-      },
-    },
-    {
-      name: "Maharashtra",
-      coordinates: {
-        latitude: 19.7515,
-        longitude: 75.7139,
-      },
-    },
-    {
-      name: "Manipur",
-      coordinates: {
-        latitude: 24.6637,
-        longitude: 93.9063,
-      },
-    },
-    {
-      name: "Meghalaya",
-      coordinates: {
-        latitude: 25.467,
-        longitude: 91.3662,
-      },
-    },
-    {
-      name: "Mizoram",
-      coordinates: {
-        latitude: 23.1645,
-        longitude: 92.9376,
-      },
-    },
-    {
-      name: "Nagaland",
-      coordinates: {
-        latitude: 26.1584,
-        longitude: 94.5624,
-      },
-    },
-    {
-      name: "Odisha",
-      coordinates: {
-        latitude: 20.9517,
-        longitude: 85.0985,
-      },
-    },
-    {
-      name: "Punjab",
-      coordinates: {
-        latitude: 31.1471,
-        longitude: 75.3412,
-      },
-    },
-    {
-      name: "Rajasthan",
-      coordinates: {
-        latitude: 27.0238,
-        longitude: 74.2179,
-      },
-    },
-    {
-      name: "Sikkim",
-      coordinates: {
-        latitude: 27.533,
-        longitude: 88.5122,
-      },
-    },
-    {
-      name: "Tamil Nadu",
-      coordinates: {
-        latitude: 11.1271,
-        longitude: 78.6569,
-      },
-    },
-    {
-      name: "Telangana",
-      coordinates: {
-        latitude: 18.1124,
-        longitude: 79.0193,
-      },
-    },
-    {
-      name: "Tripura",
-      coordinates: {
-        latitude: 23.9408,
-        longitude: 91.9882,
-      },
-    },
-    {
-      name: "Uttar Pradesh",
-      coordinates: {
-        latitude: 26.8467,
-        longitude: 80.9462,
-      },
-    },
-    {
-      name: "Uttarakhand",
-      coordinates: {
-        latitude: 30.0668,
-        longitude: 79.0193,
-      },
-    },
-    {
-      name: "West Bengal",
-      coordinates: {
-        latitude: 22.9868,
-        longitude: 87.855,
-      },
-    },
-    {
-      name: "Andaman and Nicobar Islands",
-      coordinates: {
-        latitude: 11.7401,
-        longitude: 92.6586,
-      },
-    },
-    {
-      name: "Chandigarh",
-      coordinates: {
-        latitude: 30.7333,
-        longitude: 76.7794,
-      },
-    },
-    {
-      name: "Dadra and Nagar Haveli and Daman and Diu",
-      coordinates: {
-        latitude: 20.1809,
-        longitude: 73.0169,
-      },
-    },
-    {
-      name: "Lakshadweep",
-      coordinates: {
-        latitude: 10.5667,
-        longitude: 72.6411,
-      },
-    },
-    {
-      name: "Delhi",
-      coordinates: {
-        latitude: 28.7041,
-        longitude: 77.1025,
-      },
-    },
-    {
-      name: "Puducherry",
-      coordinates: {
-        latitude: 11.9416,
-        longitude: 79.8083,
-      },
-    },
-  ];
-
-  useEffect(() => {
     async function getLeads() {
       try {
-        const response = await axios.get(`${baseURL}/lead`);
-        console.log(response.data);
-        setLeadData(response.data.data);
-        // Assuming response.data.data is your leadData array
+        const data = await fetchLeads(queryParams);
+        console.log(data);
+        setLeadData(data.data);
+        setTargetCounts(data.targetCounts);
+        setTargetValue(data.targetValue);
       } catch (error) {
-        console.log(error);
+        console.error("Failed to fetch leads:", error);
       }
     }
-    getLeads();
-  }, []);
 
-  console.log(leadData);
+    getLeads();
+  }, [queryParams]);
 
   useEffect(() => {
-    // Check if geojsonData is ready
-    if (!geojsonData || geojsonData.features.length === 0) {
-      console.error("GeoJSON data is not ready or empty");
-      return; // Exit early if data is not ready
-    }
+    setQueryParams((prev) => ({
+      ...prev,
+      from: mainDate.startDate,
+      to: mainDate.endDate,
+    }));
+  }, [mainDate]);
 
-    console.log("GeoJSON Data:", geojsonData); // Debugging output
-
-    // Set Mapbox access token
+  useEffect(() => {
     mapboxgl.accessToken =
       "pk.eyJ1IjoiNzQ4NSIsImEiOiJjbDFua3kwcHIwMDE1M2luMXhleDNqMGZiIn0.Mj40f5LXER6tUfR3ygQLaA";
 
@@ -661,60 +662,42 @@ const MapShow: React.FC = () => {
         },
       });
 
-      // Initialize a single popup instance
       const popup = new mapboxgl.Popup({
         closeButton: false,
         closeOnClick: false,
-        offset: 25, // Offset to place popup above the marker
+        offset: 25,
       });
 
-      // Show popup on mouseenter
       map.on("mouseenter", "data-points", (e) => {
         if (!e.features || !e.features[0]) return;
 
         const feature = e.features[0];
         if (feature.geometry.type === "Point") {
-          const coordinates = (feature.geometry as Point).coordinates.slice();
+          const coordinates = (feature.geometry as any).coordinates.slice();
           const company = feature.properties?.company;
           const client = feature.properties?.client;
           const count = feature.properties?.count;
           const dealValue = feature.properties?.dealValue;
 
-          console.log(company);
-          console.log(coordinates);
-
-          // Set the popup content and location, then show it
           popup
             .setLngLat(coordinates as [number, number])
             .setHTML(
-              `
-           <div style="
-      font-family: Arial, sans-serif; 
-      font-size: 12px; 
-      padding: 10px; 
-      max-width: 200px; 
-      background-color: #f8f9fa; /* Change background color here */
-      border-radius: 8px; /* Optional: round the corners */
-      color: #333; /* Optional: change text color */
-    ">
-      <h4 style="margin: 0; font-size: 14px;">${client}</h4>
-      <p style="margin: 5px 0;"><strong>Current Vendor:</strong> ${company}</p>
-      <p style="margin: 5px 0;"><strong>Strength:</strong> ${count}</p>
-      <p style="margin: 5px 0;"><strong>Deal Value:</strong> ₹${dealValue}</p>
-    </div>
-          `
+              `<div style="font-family: Arial, sans-serif; font-size: 12px; padding:10px; max-width: 200px; background: black; border-radius: 10px; color: #fff;">
+                <h4 style="margin: 0; font-size: 14px;color:#68ac25">${client}</h4>
+                <p style="margin: 5px 0;"><strong>Current Vendor:</strong> ${company}</p>
+                <p style="margin: 5px 0;"><strong>Strength:</strong> ${count}</p>
+                <p style="margin: 5px 0;"><strong>Deal Value:</strong> ₹${dealValue}</p>
+              </div>`
             )
             .addTo(map);
         }
 
-        // Change the cursor to a pointer when hovering over a point
         map.getCanvas().style.cursor = "pointer";
       });
 
-      // Remove popup on mouseleave
       map.on("mouseleave", "data-points", () => {
         popup.remove();
-        map.getCanvas().style.cursor = ""; // Reset cursor to default
+        map.getCanvas().style.cursor = "";
       });
 
       map.addControl(
@@ -725,9 +708,53 @@ const MapShow: React.FC = () => {
       mapRef.current = map;
     });
 
-    // Cleanup function to remove map instance on component unmount
     return () => map.remove();
+  }, []); //
+
+  useEffect(() => {
+    // Update the geojsonData state whenever leadData changes
+    const updatedGeojsonData: FeatureCollection<Point, GeoJsonProperties> = {
+      type: "FeatureCollection",
+      features: leadData.map((item) => ({
+        type: "Feature",
+        properties: {
+          company: item.currentVendor,
+          client: item.client,
+          count: item.noOfStudents,
+          dealValue: item.dealValue,
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [
+            item.cordinates[0], // Latitude
+            item.cordinates[1], // Longitude
+          ],
+        },
+      })),
+    };
+
+    setGeojsonData(updatedGeojsonData);
+  }, [leadData]);
+
+  console.log(leadData);
+
+  useEffect(() => {
+    if (
+      mapRef.current &&
+      mapRef.current.isStyleLoaded() &&
+      geojsonData.features.length > 0
+    ) {
+      const source = mapRef.current.getSource("salesData");
+      if (source) {
+        (source as mapboxgl.GeoJSONSource).setData(geojsonData);
+      }
+    }
   }, [geojsonData]);
+
+  // Handle input change
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
 
   const handleZoomIn = () => {
     mapRef.current?.zoomIn();
@@ -746,7 +773,7 @@ const MapShow: React.FC = () => {
       mapRef.current.flyTo({
         center: initialCenter,
         zoom: initialZoom,
-        essential: true, // This ensures the map moves even if the user has reduced motion settings
+        essential: true,
       });
     }
   };
@@ -754,30 +781,95 @@ const MapShow: React.FC = () => {
   const handleStateClick = (latitude: number, longitude: number) => {
     if (mapRef.current) {
       mapRef.current.flyTo({
-        center: [longitude, latitude], // Corrected the order to longitude, latitude
+        center: [longitude, latitude],
         zoom: 6.5,
-        essential: true, // This ensures the map moves even if the user has reduced motion settings
+        essential: true,
       });
     }
   };
 
   const handleStateChange = (event: SelectChangeEvent<string>) => {
-    // Find the state object based on the selected name
     const selectedValue =
       stateArray.find((state) => state.name === event.target.value) || null;
 
     if (selectedValue) {
-      // Only call handleStateClick if selectedValue is not null
+      setQueryParams((prev) => ({
+        ...prev,
+        state: selectedValue.name,
+      }));
+
       handleStateClick(
         selectedValue.coordinates.latitude,
         selectedValue.coordinates.longitude
       );
       setSelectedState(selectedValue);
     } else {
-      // Optionally handle the case when no state is selected or found
       console.warn("Selected state not found");
       setSelectedState(null);
+      setQueryParams((prev) => ({
+        ...prev,
+        state: "",
+      }));
     }
+  };
+
+  const handleNoOfStudentClick = () => {
+    setStrengthFilter(!strengthFilter);
+
+    setQueryParams((prev) => ({
+      ...prev,
+      dealValue: "",
+    }));
+
+    if (!strengthFilter === true) {
+      setQueryParams((prev) => ({
+        ...prev,
+        strength: "up",
+      }));
+    } else {
+      setQueryParams((prev) => ({
+        ...prev,
+        strength: "down",
+      }));
+    }
+  };
+
+  const handleDealvalueClick = () => {
+    setDealValueFilter(!dealValueFilter);
+
+    setQueryParams((prev) => ({
+      ...prev,
+      strength: "",
+    }));
+
+    if (!dealValueFilter === true) {
+      setQueryParams((prev) => ({
+        ...prev,
+        dealValue: "up",
+      }));
+    } else {
+      setQueryParams((prev) => ({
+        ...prev,
+        dealValue: "down",
+      }));
+    }
+  };
+
+  const handleTargetClick = (event: SelectChangeEvent<string>) => {
+    setTargetFilter(event.target.value);
+
+    setQueryParams((prev) => ({
+      ...prev,
+      status: event.target.value,
+    }));
+  };
+
+  const handleDateClick = () => {
+    setQueryParams((prev) => ({
+      ...prev,
+      from: mainDate.startDate,
+      to: mainDate.endDate,
+    }));
   };
 
   return (
@@ -842,7 +934,7 @@ const MapShow: React.FC = () => {
               Top Student Strength Schools
             </h1>
           </div>
-          <div className="flex items-center mt-4 justify-around gap-1 p-4  w-[100%] ">
+          <div className="flex items-center mt-4 justify-between gap-1 p-4  w-[100%] ">
             <Select
               value={selectedState?.name || ""} // Use state name or an empty string if none selected
               onChange={handleStateChange}
@@ -869,24 +961,65 @@ const MapShow: React.FC = () => {
                 </MenuItem>
               ))}
             </Select>
-            {/* <Select
-              value={"Student Strength"}
+            <Button
+              onClick={handleNoOfStudentClick}
+              endIcon={
+                <IconButton
+                  size="small"
+                  sx={{
+                    color: "#80FF00",
+                    height: "10px",
+                    width: "14px",
+                    transform: !strengthFilter
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                    transition: "transform 0.3s ease", // Added transition effect
+                  }}
+                >
+                  <ArrowUpwardIcon sx={{ fontSize: "1rem" }} />
+                </IconButton>
+              }
               sx={{
-                height: "30px",
                 bgcolor: "black",
+                height: "30px",
                 color: "white",
                 fontSize: "14px",
+                textTransform: "none",
               }}
-              IconComponent={(props) => (
-                <ArrowDropDownIcon {...props} style={{ color: "#80FF00" }} />
-              )}
             >
-              <MenuItem value="Student Strength">Student Strength</MenuItem>
-              <MenuItem value="Pakistan">Pakistan</MenuItem>
-            </Select> */}
+              No of Student
+            </Button>
+            <Button
+              onClick={handleDealvalueClick}
+              endIcon={
+                <IconButton
+                  size="small"
+                  sx={{
+                    color: "#80FF00",
+                    height: "10px",
+                    width: "14px",
+                    transform: !dealValueFilter
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                    transition: "transform 0.3s ease", // Added transition effect
+                  }}
+                >
+                  <ArrowUpwardIcon sx={{ fontSize: "1rem" }} />
+                </IconButton>
+              }
+              sx={{
+                bgcolor: "black",
+                height: "30px",
+                color: "white",
+                fontSize: "14px",
+                textTransform: "none",
+              }}
+            >
+              Deal Value
+            </Button>
             <Select
-              value={"target"}
-              // label="Target"
+              value={targetFilter || ""}
+              onChange={handleTargetClick}
               sx={{
                 height: "30px",
                 bgcolor: "black",
@@ -896,15 +1029,18 @@ const MapShow: React.FC = () => {
               IconComponent={(props) => (
                 <ArrowDropDownIcon {...props} style={{ color: "#80FF00" }} />
               )}
+              displayEmpty
             >
+              <MenuItem value="">All Leads</MenuItem>
               <MenuItem value="target">Target</MenuItem>
               <MenuItem value="closed">Closed</MenuItem>
-              <MenuItem value="notClosed">Not Closed</MenuItem>
             </Select>
           </div>
           <div className="w-[100%] flex px-4 mb-2">
             {" "}
             <TextField
+              value={searchQuery}
+              onChange={handleSearchChange}
               variant="outlined"
               fullWidth
               sx={{
@@ -943,7 +1079,7 @@ const MapShow: React.FC = () => {
             />
           </div>
           <Box
-            maxHeight={"48vh"}
+            height={"48vh"}
             overflow={"auto"}
             sx={{
               "&::-webkit-scrollbar": {
@@ -961,7 +1097,7 @@ const MapShow: React.FC = () => {
               },
             }}
           >
-            {leadData.length > 0 &&
+            {leadData.length > 0 ? (
               leadData?.map((data, index) => (
                 <>
                   <div
@@ -975,14 +1111,14 @@ const MapShow: React.FC = () => {
                       />
                       <h6
                         onClick={() => setShowLeadDetails(true)}
-                        className="text-[14px] max-w-[200px] cursor-pointer mr-3"
+                        className="text-[14px] max-w-[200px] cursor-pointer"
                       >
                         {data.client}
                       </h6>
                     </div>
                     <div className="flex gap-5">
                       <div className="flex flex-col items-start gap-1">
-                        <div className="flex  items-center gap-2">
+                        <div className="flex   items-center gap-2">
                           <h6 className="text-[14px] text-[#80FF00]">
                             {data?.noOfStudents}
                           </h6>
@@ -1006,7 +1142,12 @@ const MapShow: React.FC = () => {
                   </div>
                   <Divider className="bg-gray-500" />
                 </>
-              ))}
+              ))
+            ) : (
+              <div className="flex justify-center items-center h-[35vh]">
+                <h3 style={{ color: "#80FF00" }}>No Leads To Show</h3>
+              </div>
+            )}
           </Box>
         </div>
         {/* left section */}
@@ -1028,7 +1169,6 @@ const MapShow: React.FC = () => {
               )}
             >
               <MenuItem value="India">India</MenuItem>
-              <MenuItem value="Pakistan">Pakistan</MenuItem>
             </Select>
             <Select
               value={"Outside Sales"}
@@ -1049,20 +1189,26 @@ const MapShow: React.FC = () => {
           </div>
           <h1 className="text-white text-xl font-[300] ">Good Morning, Alin</h1>
           <div className="rounded-3xl p-2 px-4 flex items-center gap-4 bg-[#204244]">
-            <DateSelection dates={circularDate} setDates={setCircularDate} />
+            <DateSelection
+              dates={mainDate}
+              setDates={setMainDate}
+              mainDate={handleDateClick}
+            />
             <div className="flex items-center gap-1 ">
               <span className="rounded-[50%] h-2 w-2 bg-[#80FF00]"></span>
-              <h1 className="text-[#80FF00] text-[12px]">94</h1>
+              <h1 className="text-[#80FF00] text-[12px]">
+                {targetCounts.closed}
+              </h1>
               <h1 className="text-[#C4C4C4] text-[12px]">Closed</h1>
             </div>
-            <div className="flex items-center gap-1">
+            {/* <div className="flex items-center gap-1">
               <span className="rounded-[50%] h-2 w-2 bg-[#E53939]"></span>
               <h1 className="text-[#E53939] text-[12px]">94</h1>
               <h1 className="text-[#C4C4C4] text-[12px]">Not Closed</h1>
-            </div>
+            </div> */}
             <div className="flex items-center gap-1">
               <span className="rounded-[50%] h-2 w-2 bg-[#fff]"></span>
-              <h1 className="text-[#fff] text-[12px]">94</h1>
+              <h1 className="text-[#fff] text-[12px]">{targetCounts.target}</h1>
               <h1 className="text-[#C4C4C4] text-[12px]">Target</h1>
             </div>
           </div>
@@ -1074,7 +1220,7 @@ const MapShow: React.FC = () => {
           <div className="relative w-[100%]">
             <div className="mt-3  p-4 px-6 ">
               <h1 className="text-white text-xl mb-3">Team A</h1>
-              <h1 className="text-[#80FF00] text-2xl">₹26,76,56786</h1>
+              <h1 className="text-[#80FF00] text-2xl">₹{targetValue?.closed}</h1>
               <div className="flex item center gap-2 mt-2">
                 <h1 className="text-[#80FF00] text-lg">34%</h1>
                 <h1 className="text-[#C4C4C4] text-md">Increased</h1>
@@ -1083,7 +1229,7 @@ const MapShow: React.FC = () => {
             </div>
             <div className="absolute bottom-[-25px] right-[0px] p-3  bg-[#204244] rounded-lg">
               <div className="flex item center gap-1">
-                <h1 className="text-[#80FF00] text-sm">94</h1>
+                <h1 className="text-[#80FF00] text-sm">{targetCounts?.closed}</h1>
                 <h1 className="text-[#C4C4C4] text-sm">Schools</h1>
               </div>
               <h1 className="text-[#C4C4C4] text-xs  mt-[2px]">Closed</h1>
@@ -1091,13 +1237,13 @@ const MapShow: React.FC = () => {
           </div>
           <div className="mt-10 w-[100%]">
             <div className="flex item center gap-1 mb-1 ">
-              <h1 className="text-[#80FF00] text-sm">62%</h1>
+              <h1 className="text-[#80FF00] text-sm">{(targetValue?.closed/targetValue?.target)*100}%</h1>
               <h1 className="text-[#C4C4C4] text-sm">Total target status</h1>
             </div>
-            <ProgressBar progression={60} width={100} />
+            <ProgressBar progression={(targetValue?.closed/targetValue?.target)*100} width={100} />
             <div className="flex justify-between w-[100%] mt-1">
-              <h1 className="text-[#80FF00] text-xs">₹73,62294</h1>
-              <h1 className="text-[#C4C4C4] text-xs">₹1,73,62294</h1>
+              <h1 className="text-[#80FF00] text-xs">₹{targetValue?.closed}</h1>
+              <h1 className="text-[#C4C4C4] text-xs">₹{targetValue?.target}</h1>
             </div>
             <div
               className="w-[100%]  mt-6 py-5 flex justify-between items-center  "
