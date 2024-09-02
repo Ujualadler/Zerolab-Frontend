@@ -493,6 +493,7 @@ const MapShow: React.FC = () => {
   const [source, setSource] = useState<any>("");
   const [leadData, setLeadData] = useState<ILead[]>([]);
   const [salesRepData, setSalesRepData] = useState<any>([]);
+  const [leadStatusCounts, setLeadStatusCounts] = useState<any>([]);
   const [salesPipelineLeadData, setSalesPipelineLeadData] = useState<ILead[]>(
     []
   );
@@ -603,6 +604,7 @@ const MapShow: React.FC = () => {
         setTeamPerformanceLeadData(data.data);
         setTargetCounts(data.targetCounts);
         setTargetValue(data.targetValue);
+        setLeadStatusCounts(data.leadStatusCounts)
       } catch (error) {
         console.error("Failed to fetch leads:", error);
       }
@@ -733,12 +735,12 @@ const MapShow: React.FC = () => {
     // ) {
     //   console.log(geojsonData)
     //   const source = mapRef?.current.getSource("salesData");
-      console.log(source)
+    console.log(source);
     if (source) {
       (source as mapboxgl.GeoJSONSource).setData(geojsonData);
     }
     // }
-  }, [geojsonData,source]);
+  }, [geojsonData, source]);
 
   useEffect(() => {
     async function getSalesRepLeads() {
@@ -911,8 +913,19 @@ const MapShow: React.FC = () => {
     setShowLeadDetails(true);
   };
 
-  // const handleTeamPerformance = () => {
 
+  console.log((leadStatusCounts?.filter((data:any)=>data._id==='Qualification').count/leadStatusCounts.filter((data:any)=>data._id==='Lead Generation').count)*100)
+
+  function calculateLeadStatusPercentage(targetStatus:string) {
+    // Find the counts for the target status and the base status
+    const baseCount = leadData.length;
+    const targetCount = leadStatusCounts.find((data:any) => data._id === targetStatus)?.count || 0;
+  
+    // Calculate the percentage, avoiding division by zero
+    const percentage = baseCount !== 0 ? (targetCount / baseCount) * 100 : 0;
+  
+    return percentage;
+  }
   return (
     <>
       {addLeads && <LeadAdding open={addLeads} show={setAddLeads} />}
@@ -1665,8 +1678,8 @@ const MapShow: React.FC = () => {
                     >
                       <PipelineProgressbar
                         title="Lead Generation"
-                        width={90}
-                        percentage={90}
+                        width={100}
+                        percentage={100}
                       />
                       {showTable === "Lead Generation" && (
                         <GradeIcon fontSize={"small"} />
@@ -1678,8 +1691,9 @@ const MapShow: React.FC = () => {
                     >
                       <PipelineProgressbar
                         title="Qualification & Initial Contact"
-                        width={90}
-                        percentage={70}
+                        width={100}
+                        percentage={calculateLeadStatusPercentage('Qualification')}
+
                       />
                       {showTable === "Qualification" && (
                         <GradeIcon fontSize={"small"} />
@@ -1691,8 +1705,8 @@ const MapShow: React.FC = () => {
                     >
                       <PipelineProgressbar
                         title="Demo"
-                        width={90}
-                        percentage={60}
+                        width={100}
+                        percentage={calculateLeadStatusPercentage('Demo')}
                       />
                       {showTable === "Demo" && <GradeIcon fontSize={"small"} />}
                     </div>
@@ -1702,8 +1716,9 @@ const MapShow: React.FC = () => {
                     >
                       <PipelineProgressbar
                         title="Proposal"
-                        width={90}
-                        percentage={50}
+                        width={100}
+                        percentage={calculateLeadStatusPercentage('Proposal')}
+
                       />
                       {showTable === "Proposal" && (
                         <GradeIcon fontSize={"small"} />
@@ -1715,15 +1730,16 @@ const MapShow: React.FC = () => {
                     >
                       <PipelineProgressbar
                         title="Negotiation"
-                        width={90}
-                        percentage={40}
+                        width={100}
+                        percentage={calculateLeadStatusPercentage('Negotiation')}
+
                       />
                       {showTable === "Negotiation" && (
                         <GradeIcon fontSize={"small"} />
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 w-[90%]">
+                    <div className="flex items-center gap-2 w-[100%]">
                       <div
                         className="flex gap-1 items-center cursor-pointer w-[25%]"
                         onClick={() => handlePipelineClick("Closed")}
@@ -1731,7 +1747,8 @@ const MapShow: React.FC = () => {
                         <PipelineProgressbar
                           title="Closed"
                           width={100}
-                          percentage={60}
+                          percentage={calculateLeadStatusPercentage('Closed')}
+
                         />
                       </div>
                       <div
@@ -1741,7 +1758,8 @@ const MapShow: React.FC = () => {
                         <PipelineProgressbar
                           title="hold"
                           width={100}
-                          percentage={40}
+                          percentage={calculateLeadStatusPercentage('hold')}
+
                         />
                       </div>
                       <div
@@ -1751,7 +1769,8 @@ const MapShow: React.FC = () => {
                         <PipelineProgressbar
                           title="Rejected"
                           width={100}
-                          percentage={45}
+                          percentage={calculateLeadStatusPercentage('Rejected')}
+
                         />
                       </div>
                       <div
@@ -1761,7 +1780,8 @@ const MapShow: React.FC = () => {
                         <PipelineProgressbar
                           title="Retention"
                           width={100}
-                          percentage={20}
+                          percentage={calculateLeadStatusPercentage('Retention')}
+
                         />
                       </div>
                     </div>
@@ -1775,7 +1795,7 @@ const MapShow: React.FC = () => {
                     >
                       <PipelineProgressbar
                         title="Demo"
-                        width={90}
+                        width={100}
                         percentage={60}
                       />
                       {showTable === "Demo" && <GradeIcon fontSize={"small"} />}
@@ -1786,7 +1806,7 @@ const MapShow: React.FC = () => {
                     >
                       <PipelineProgressbar
                         title="Proposal"
-                        width={90}
+                        width={100}
                         percentage={50}
                       />
                       {showTable === "Proposal" && (
@@ -1799,7 +1819,7 @@ const MapShow: React.FC = () => {
                     >
                       <PipelineProgressbar
                         title="Negotiation"
-                        width={90}
+                        width={100}
                         percentage={40}
                       />
                       {showTable === "Negotiation" && (
@@ -1812,7 +1832,7 @@ const MapShow: React.FC = () => {
                     >
                       <PipelineProgressbar
                         title="Closure"
-                        width={90}
+                        width={100}
                         percentage={30}
                       />
                       {showTable === "Closure" && (

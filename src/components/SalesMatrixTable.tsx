@@ -352,7 +352,7 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
                   align="left"
                 >
                   {row.products.map((data: any) => (
-                    <h5 className="text-white">{data.productId.name}</h5>
+                    <h5 key={data.productId.name} className="text-white">{data.productId.name}</h5>
                   ))}
                 </TableCell>
 

@@ -139,7 +139,8 @@ export default function LeadDetails({ open, show, id }: LeadDetailsProps) {
 
           // Find the correct column based on leadStatus
           const targetColumnIndex = newColumns.findIndex(
-            (column) => column.title.toLowerCase() === lead.leadStatus.toLowerCase()
+            (column) =>
+              column.title.toLowerCase() === lead.leadStatus.toLowerCase()
           );
 
           if (targetColumnIndex >= 0) {
@@ -210,7 +211,6 @@ export default function LeadDetails({ open, show, id }: LeadDetailsProps) {
 
     setColumns([...columns]);
   };
-
 
   const nextIndex = leadData.leadStatus
     ? initialColumns.findIndex((data) => data.title === leadData.leadStatus) + 1
@@ -537,8 +537,9 @@ export default function LeadDetails({ open, show, id }: LeadDetailsProps) {
                         Items
                       </Typography>
                       <Box display={"flex"} alignItems={"center"} gap={1}>
-                        {leadData?.products?.map((data: any) => (
+                        {leadData?.products?.map((data: any, index: any) => (
                           <Typography
+                            key={data._id}
                             sx={{
                               background: "#2a2b2f",
                               p: 1,

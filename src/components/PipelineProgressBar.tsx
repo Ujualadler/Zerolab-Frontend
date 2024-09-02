@@ -16,6 +16,9 @@ const PipelineProgressbar: React.FC<ProgressTooltipProps> = ({
   title,
   percentage,
 }) => {
+
+  console.log(width)
+  console.log(percentage)
   return (
     <Tooltip title={`${percentage}%`}>
       <Box
@@ -27,8 +30,11 @@ const PipelineProgressbar: React.FC<ProgressTooltipProps> = ({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          position:'relative'
         }}
       >
+          <Typography className="text-white text-xs m-2 absolute left-3">{title}</Typography>
+        
         <Box
           sx={{
             width: `${percentage}%`,
@@ -36,7 +42,6 @@ const PipelineProgressbar: React.FC<ProgressTooltipProps> = ({
             height: "100%",
             display: "flex",
             alignItems: "center",
-            px: 2,
             backgroundColor:
               title === "Closed"
                 ? "#4D9900"
@@ -46,7 +51,6 @@ const PipelineProgressbar: React.FC<ProgressTooltipProps> = ({
             transition: "width 0.5s ease-in-out",
           }}
         >
-          <Typography className="text-white text-xs">{title}</Typography>
         </Box>
       </Box>
     </Tooltip>
