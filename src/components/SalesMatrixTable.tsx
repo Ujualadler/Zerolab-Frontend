@@ -138,6 +138,8 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
   const tableRef = React.useRef<HTMLDivElement>(null); // Reference to the table container
   const [showDialog, setShowDialog] = React.useState(false);
   const [showLeadDetails, setShowLeadDetails] = React.useState<boolean>(false);
+  const [selectedLeadId, setSelectedleadId] = React.useState<string>("");
+
   // State to control dialog visibility
 
   console.log(leadData);
@@ -170,10 +172,19 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
     { name: "Rejected" },
   ];
 
+  const handleSingleLeadClick = (id: string) => {
+    setSelectedleadId(id);
+    setShowLeadDetails(true);
+  };
+
   return (
     <Box sx={{ position: "relative", padding: "16px" }}>
-      {showLeadDetails && (
-        <LeadDetails show={setShowLeadDetails} open={showLeadDetails} />
+      {showLeadDetails && selectedLeadId && (
+        <LeadDetails
+          show={setShowLeadDetails}
+          open={showLeadDetails}
+          id={selectedLeadId}
+        />
       )}
       <TableContainer
         sx={{
@@ -271,7 +282,7 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
                 }}
               >
                 <TableCell
-                  onClick={() => setShowLeadDetails(true)}
+                  onClick={() => handleSingleLeadClick(row._id)}
                   sx={{
                     color: "white",
                     borderRight: "1px solid #5F5C5C",

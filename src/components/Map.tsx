@@ -733,12 +733,12 @@ const MapShow: React.FC = () => {
     // ) {
     //   console.log(geojsonData)
     //   const source = mapRef?.current.getSource("salesData");
-    //   console.log(source)
+      console.log(source)
     if (source) {
       (source as mapboxgl.GeoJSONSource).setData(geojsonData);
     }
     // }
-  }, [geojsonData]);
+  }, [geojsonData,source]);
 
   useEffect(() => {
     async function getSalesRepLeads() {
