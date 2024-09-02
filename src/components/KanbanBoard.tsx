@@ -187,7 +187,7 @@ export default function KanbanBoard({ open, show }: EventDetailsProps) {
                 <h1 className="text-[#80FF00] text-md">62%</h1>
               </div>
               <div className="flex justify-end w-[80%] ">
-                <h1 className="text-[#C4C4C4] text-md">₹1,73,62294</h1>
+                <h1 className="text-[#160909] text-md">₹1,73,62294</h1>
               </div>
             </div>
             <IconButton

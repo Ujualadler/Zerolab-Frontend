@@ -126,17 +126,21 @@ interface SalesMatrixTableProps {
   type: string;
   scroll: Boolean;
   sHeight: string;
+  leadData?: any;
 }
 
 const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
   type,
   scroll,
   sHeight,
+  leadData,
 }) => {
   const tableRef = React.useRef<HTMLDivElement>(null); // Reference to the table container
   const [showDialog, setShowDialog] = React.useState(false);
   const [showLeadDetails, setShowLeadDetails] = React.useState<boolean>(false);
   // State to control dialog visibility
+
+  console.log(leadData);
 
   // Check scroll position
   const handleScroll = () => {
@@ -148,6 +152,23 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
       setShowDialog(isAtBottom);
     }
   };
+
+  interface leadStatusType {
+    name: string;
+  }
+
+  const leadStatusCalc: leadStatusType[] = [
+    { name: "Lead Generation" },
+    { name: "Qualification" },
+    { name: "Demo" },
+    { name: "Proposal" },
+    { name: "Negotiation" },
+    { name: "Closure" },
+    { name: "hold" },
+    { name: "Retention" },
+    { name: "Closed" },
+    { name: "Rejected" },
+  ];
 
   return (
     <Box sx={{ position: "relative", padding: "16px" }}>
@@ -242,7 +263,7 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row, index) => (
+            {leadData.map((row: any, index: any) => (
               <TableRow
                 key={index}
                 sx={{
@@ -266,28 +287,64 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
                   align="left"
                 >
                   <div className="flex items-baseline gap-1">
-                    <h1 className="text-[10px]">{row.completion}%</h1>
-                    <ProgressBar progression={row.completion} width={85} />
+                    <h1 className="text-[10px]">
+                      {row.leadStatus === "Lead Generation"
+                        ? 0
+                        : row.leadStatus === "Qualification"
+                        ? 20
+                        : row.leadStatus === "Demo"
+                        ? 40
+                        : row.leadStatus === "Proposal"
+                        ? 60
+                        : row.leadStatus === "Negotiation"
+                        ? 80
+                        : row.leadStatus === "Closed"
+                        ? 100
+                        : 0}
+                      %
+                    </h1>
+                    <ProgressBar
+                      progression={
+                        row.leadStatus === "Lead Generation"
+                          ? 0
+                          : row.leadStatus === "Qualification"
+                          ? 20
+                          : row.leadStatus === "Demo"
+                          ? 40
+                          : row.leadStatus === "Proposal"
+                          ? 60
+                          : row.leadStatus === "Negotiation"
+                          ? 80
+                          : row.leadStatus === "Closed"
+                          ? 100
+                          : 0
+                      }
+                      width={85}
+                    />
                   </div>
                 </TableCell>
                 <TableCell
                   sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
                   align="left"
                 >
-                  {row.date}
+                  {new Date(row.createdDate).toLocaleDateString("en-GB")}
                 </TableCell>
+
                 <TableCell
                   sx={{ borderRight: "1px solid #5F5C5C", color: "#80FF00" }}
                   align="left"
                 >
-                  ₹{row.value}
+                  ₹{row.dealValue}
                 </TableCell>
                 <TableCell
                   sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
                   align="left"
                 >
-                  {row.items}
+                  {row.products.map((data: any) => (
+                    <h5 className="text-white">{data.productId.name}</h5>
+                  ))}
                 </TableCell>
+
                 <TableCell
                   sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
                   align="left"
@@ -298,10 +355,10 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
                   sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
                   align="left"
                 >
-                  {row.studentCount}
+                  {row.noOfStudents}
                 </TableCell>
                 <TableCell sx={{ color: "white" }} align="left">
-                  {row.salesRep}
+                  {row.assignedTo}
                 </TableCell>
               </TableRow>
             ))}
@@ -311,7 +368,11 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
 
       {/* Show ScrollTable as a dialog when scrolled to bottom */}
       {showDialog && scroll && (
-        <ScrollTable open={showDialog} show={setShowDialog} />
+        <ScrollTable
+          leadData={leadData}
+          open={showDialog}
+          show={setShowDialog}
+        />
       )}
     </Box>
   );
@@ -331,9 +392,10 @@ const Transition = React.forwardRef(function Transition(
 interface EventDetailsProps {
   open: boolean;
   show: (value: boolean) => void;
+  leadData?: any;
 }
 
-function ScrollTable({ open, show }: EventDetailsProps) {
+function ScrollTable({ open, show, leadData }: EventDetailsProps) {
   const setVhProperty = () => {
     const vh = window.innerHeight * 0.01;
     document.documentElement.style.setProperty("--vh", `${vh}px`);
@@ -506,6 +568,7 @@ function ScrollTable({ open, show }: EventDetailsProps) {
           >
             <SalesMatrixTable
               type="nvnadbvfnbvsdnf"
+              leadData={leadData}
               scroll={false}
               sHeight={"calc(var(--vh, 1vh) * 56)"}
             />

@@ -129,37 +129,6 @@ const toggleData: toggleDataType[] = [
   { name: "Summary", url: "/summary" },
 ];
 
-const teamPerformanceData: TeamPerformanceProps[] = [
-  {
-    name: "John Doe",
-    total: 100000,
-    current: 62000,
-    percentage: 62,
-    status: "high",
-  },
-  {
-    name: "Jane Smith",
-    total: 80000,
-    current: 45000,
-    percentage: 56,
-    status: "low",
-  },
-  {
-    name: "Michael Johnson",
-    total: 120000,
-    current: 110000,
-    percentage: 92,
-    status: "high",
-  },
-  {
-    name: "Leo Das",
-    total: 340000,
-    current: 160000,
-    percentage: 76,
-    status: "low",
-  },
-];
-
 const ROIData: ROIItemProps[] = [
   { title: "Total Revenue", value: 500000 },
   { title: "Commission", value: 30000 },
@@ -521,13 +490,23 @@ const MapShow: React.FC = () => {
   const [strengthFilter, setStrengthFilter] = useState<boolean>(false);
   const [dealValueFilter, setDealValueFilter] = useState<boolean>(false);
   const [targetFilter, setTargetFilter] = useState<string>("");
+  const [source, setSource] = useState<any>("");
   const [leadData, setLeadData] = useState<ILead[]>([]);
+  const [salesRepData, setSalesRepData] = useState<any>([]);
+  const [salesPipelineLeadData, setSalesPipelineLeadData] = useState<ILead[]>(
+    []
+  );
+  const [teamPerformanceLeadData, setTeamPerformanceLeadData] = useState<
+    ILead[]
+  >([]);
   const [targetCounts, setTargetCounts] = useState<any>({});
   const [targetValue, setTargetValue] = useState<any>({});
   const [selectedState, setSelectedState] = React.useState<StateType | null>(
     null
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [salesPipelineTeam, setSalesPipelineTeam] = useState<string>("");
+  const [selectedLeadId, setSelectedleadId] = useState<string>("");
 
   const [circularDate, setCircularDate] = useState<DateRange>({
     startDate: new Date(new Date().setMonth(new Date().getMonth() - 6)),
@@ -535,6 +514,11 @@ const MapShow: React.FC = () => {
     key: "selection",
   });
   const [mainDate, setMainDate] = useState<DateRange>({
+    startDate: new Date(new Date().setMonth(new Date().getMonth() - 12)),
+    endDate: new Date(),
+    key: "selection",
+  });
+  const [teamDate, setTeamDate] = useState<DateRange>({
     startDate: new Date(new Date().setMonth(new Date().getMonth() - 12)),
     endDate: new Date(),
     key: "selection",
@@ -615,13 +599,14 @@ const MapShow: React.FC = () => {
         const data = await fetchLeads(queryParams);
         console.log(data);
         setLeadData(data.data);
+        setSalesPipelineLeadData(data.data);
+        setTeamPerformanceLeadData(data.data);
         setTargetCounts(data.targetCounts);
         setTargetValue(data.targetValue);
       } catch (error) {
         console.error("Failed to fetch leads:", error);
       }
     }
-
     getLeads();
   }, [queryParams]);
 
@@ -706,6 +691,8 @@ const MapShow: React.FC = () => {
       );
 
       mapRef.current = map;
+      const source = mapRef?.current.getSource("salesData");
+      setSource(source);
     });
 
     return () => map.remove();
@@ -739,17 +726,35 @@ const MapShow: React.FC = () => {
   console.log(leadData);
 
   useEffect(() => {
-    if (
-      mapRef.current &&
-      mapRef.current.isStyleLoaded() &&
-      geojsonData.features.length > 0
-    ) {
-      const source = mapRef.current.getSource("salesData");
-      if (source) {
-        (source as mapboxgl.GeoJSONSource).setData(geojsonData);
+    // if (
+    //   mapRef.current &&
+    //   mapRef.current.isStyleLoaded() &&
+    //   geojsonData.features.length > 0
+    // ) {
+    //   console.log(geojsonData)
+    //   const source = mapRef?.current.getSource("salesData");
+    //   console.log(source)
+    if (source) {
+      (source as mapboxgl.GeoJSONSource).setData(geojsonData);
+    }
+    // }
+  }, [geojsonData]);
+
+  useEffect(() => {
+    async function getSalesRepLeads() {
+      try {
+        const res = await axios.get(`${baseURL}/salesRep`);
+        console.log(res.data);
+        setSalesRepData(res.data.data);
+      } catch (error) {
+        console.error("Failed to fetch leads:", error);
       }
     }
-  }, [geojsonData]);
+
+    getSalesRepLeads();
+  }, []);
+
+  console.log(salesRepData);
 
   // Handle input change
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -872,12 +877,52 @@ const MapShow: React.FC = () => {
     }));
   };
 
+  const handleFilterChange = (teamMember: string, status: string) => {
+    let filteredData = leadData;
+
+    if (teamMember === "") {
+      setSalesPipelineLeadData(leadData); // Show all data if the selection is empty
+    } else if (teamMember === "Alin Anto") {
+      filteredData = leadData.filter((data) => data.assignedTo === "Alin Anto");
+    } else {
+      filteredData = leadData.filter((data) => data.assignedTo === teamMember);
+    }
+
+    if (status && status !== "Lead Generation") {
+      filteredData = filteredData.filter((data) => data.leadStatus === status);
+    }
+
+    setSalesPipelineLeadData(filteredData);
+  };
+
+  const handleSalesPipeline = (e: SelectChangeEvent<string>) => {
+    setSalesPipelineTeam(e.target.value);
+
+    handleFilterChange(e.target.value, showTable);
+  };
+
+  const handlePipelineClick = (status: string) => {
+    setShowTable(status);
+    handleFilterChange(salesPipelineTeam, status);
+  };
+
+  const handleSingleLeadClick = (id: string) => {
+    setSelectedleadId(id);
+    setShowLeadDetails(true);
+  };
+
+  // const handleTeamPerformance = () => {
+
   return (
     <>
       {addLeads && <LeadAdding open={addLeads} show={setAddLeads} />}
       {showBoard && <KanbanBoard open={showBoard} show={setShowBoard} />}
-      {showLeadDetails && (
-        <LeadDetails show={setShowLeadDetails} open={showLeadDetails} />
+      {showLeadDetails && selectedLeadId && (
+        <LeadDetails
+          show={setShowLeadDetails}
+          open={showLeadDetails}
+          id={selectedLeadId}
+        />
       )}
       <div
         className="relative"
@@ -1110,7 +1155,7 @@ const MapShow: React.FC = () => {
                         style={{ color: "#80FF00" }}
                       />
                       <h6
-                        onClick={() => setShowLeadDetails(true)}
+                        onClick={() => handleSingleLeadClick(data._id)}
                         className="text-[14px] max-w-[200px] cursor-pointer"
                       >
                         {data.client}
@@ -1184,7 +1229,7 @@ const MapShow: React.FC = () => {
               )}
             >
               <MenuItem value="Outside Sales">Outside Sales</MenuItem>
-              <MenuItem value="Pakistan">Pakistan</MenuItem>
+              <MenuItem value="Pakistan">Inside Sales</MenuItem>
             </Select>
           </div>
           <h1 className="text-white text-xl font-[300] ">Good Morning, Alin</h1>
@@ -1220,7 +1265,9 @@ const MapShow: React.FC = () => {
           <div className="relative w-[100%]">
             <div className="mt-3  p-4 px-6 ">
               <h1 className="text-white text-xl mb-3">Team A</h1>
-              <h1 className="text-[#80FF00] text-2xl">₹{targetValue?.closed}</h1>
+              <h1 className="text-[#80FF00] text-2xl">
+                ₹{targetValue?.closed}
+              </h1>
               <div className="flex item center gap-2 mt-2">
                 <h1 className="text-[#80FF00] text-lg">34%</h1>
                 <h1 className="text-[#C4C4C4] text-md">Increased</h1>
@@ -1229,7 +1276,9 @@ const MapShow: React.FC = () => {
             </div>
             <div className="absolute bottom-[-25px] right-[0px] p-3  bg-[#204244] rounded-lg">
               <div className="flex item center gap-1">
-                <h1 className="text-[#80FF00] text-sm">{targetCounts?.closed}</h1>
+                <h1 className="text-[#80FF00] text-sm">
+                  {targetCounts?.closed}
+                </h1>
                 <h1 className="text-[#C4C4C4] text-sm">Schools</h1>
               </div>
               <h1 className="text-[#C4C4C4] text-xs  mt-[2px]">Closed</h1>
@@ -1237,10 +1286,18 @@ const MapShow: React.FC = () => {
           </div>
           <div className="mt-10 w-[100%]">
             <div className="flex item center gap-1 mb-1 ">
-              <h1 className="text-[#80FF00] text-sm">{(targetValue?.closed/targetValue?.target)*100}%</h1>
+              <h1 className="text-[#80FF00] text-sm">
+                {Math.round(
+                  (targetValue?.closed / targetValue?.target) * 100 * 10
+                ) / 10}
+                %
+              </h1>
               <h1 className="text-[#C4C4C4] text-sm">Total target status</h1>
             </div>
-            <ProgressBar progression={(targetValue?.closed/targetValue?.target)*100} width={100} />
+            <ProgressBar
+              progression={(targetValue?.closed / targetValue?.target) * 100}
+              width={100}
+            />
             <div className="flex justify-between w-[100%] mt-1">
               <h1 className="text-[#80FF00] text-xs">₹{targetValue?.closed}</h1>
               <h1 className="text-[#C4C4C4] text-xs">₹{targetValue?.target}</h1>
@@ -1380,25 +1437,40 @@ const MapShow: React.FC = () => {
               <div className="col-span-8">
                 <div className="col-span-12">
                   <div className="flex items-baseline gap-1 mb-1 ">
-                    <h1 className="text-[#80FF00] text-2xl">₹23,654534</h1>
+                    <h1 className="text-[#80FF00] text-2xl">
+                      ₹{targetValue?.closed}
+                    </h1>
                     <h1 className="text-[#fff] text-xl">Team A</h1>
                   </div>
                   <div className="flex gap-2 items-baseline">
-                    <ProgressBar progression={62} width={80} />
-                    <h1 className="text-[#80FF00] text-xl">62%</h1>
+                    <ProgressBar
+                      progression={
+                        (targetValue?.closed / targetValue?.target) * 100
+                      }
+                      width={80}
+                    />
+                    <h1 className="text-[#80FF00] text-xl">
+                      {Math.round(
+                        (targetValue?.closed / targetValue?.target) * 100 * 10
+                      ) / 10}
+                      %
+                    </h1>
                   </div>
                   <div className="flex justify-end w-[80%] ">
-                    <h1 className="text-[#C4C4C4] text-xl">₹1,73,62294</h1>
+                    <h1 className="text-[#C4C4C4] text-xl">
+                      ₹{targetValue?.target}
+                    </h1>
                   </div>
                 </div>
                 <div className="col-span-12 gap-10 grid grid-cols-12 mt-10">
-                  {teamPerformanceData.map((data, index) => (
-                    <TeamPerformanceItem
-                      key={index}
-                      index={index + 1}
-                      data={data}
-                    />
-                  ))}
+                  {salesRepData.length > 0 &&
+                    salesRepData?.map((data: any, index: any) => (
+                      <TeamPerformanceItem
+                        key={index}
+                        index={index + 1}
+                        data={data}
+                      />
+                    ))}
                 </div>
               </div>
             </div>
@@ -1510,7 +1582,9 @@ const MapShow: React.FC = () => {
                 <h3 className="text-white">Sales Pipeline</h3>
                 <div className="flex items-center ml-6  justify-around gap-3 ">
                   <Select
-                    value={"India"}
+                    value={salesPipelineTeam}
+                    onChange={handleSalesPipeline}
+                    displayEmpty
                     sx={{
                       height: "30px",
                       bgcolor: "black",
@@ -1524,9 +1598,11 @@ const MapShow: React.FC = () => {
                       />
                     )}
                   >
-                    <MenuItem value="India">Overall (team)</MenuItem>
-                    <MenuItem value="Pakistan">Harold Das</MenuItem>
-                    <MenuItem value="Pakistan">Leo Das</MenuItem>
+                    <MenuItem value="">Overall (team)</MenuItem>
+                    <MenuItem value="Alin Anto">Alin Anto</MenuItem>
+                    <MenuItem value="Jissmon George">Jissmon George</MenuItem>
+                    <MenuItem value="Annam Giri">Annam Giri</MenuItem>
+                    <MenuItem value="Adarsh Shetty">Adarsh Shetty</MenuItem>
                   </Select>
                   <Button
                     onClick={() => setShowBoard(true)}
@@ -1585,7 +1661,7 @@ const MapShow: React.FC = () => {
                   <>
                     <div
                       className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => setShowTable("Lead Generation")}
+                      onClick={() => handlePipelineClick("Lead Generation")}
                     >
                       <PipelineProgressbar
                         title="Lead Generation"
@@ -1598,22 +1674,20 @@ const MapShow: React.FC = () => {
                     </div>
                     <div
                       className="flex gap-1 items-center cursor-pointer "
-                      onClick={() =>
-                        setShowTable("Qualification & Initial Contact")
-                      }
+                      onClick={() => handlePipelineClick("Qualification")}
                     >
                       <PipelineProgressbar
                         title="Qualification & Initial Contact"
                         width={90}
                         percentage={70}
                       />
-                      {showTable === "Qualification & Initial Contact" && (
+                      {showTable === "Qualification" && (
                         <GradeIcon fontSize={"small"} />
                       )}
                     </div>
                     <div
                       className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => setShowTable("Demo")}
+                      onClick={() => handlePipelineClick("Demo")}
                     >
                       <PipelineProgressbar
                         title="Demo"
@@ -1624,7 +1698,7 @@ const MapShow: React.FC = () => {
                     </div>
                     <div
                       className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => setShowTable("Proposal")}
+                      onClick={() => handlePipelineClick("Proposal")}
                     >
                       <PipelineProgressbar
                         title="Proposal"
@@ -1637,7 +1711,7 @@ const MapShow: React.FC = () => {
                     </div>
                     <div
                       className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => setShowTable("Negotiation")}
+                      onClick={() => handlePipelineClick("Negotiation")}
                     >
                       <PipelineProgressbar
                         title="Negotiation"
@@ -1649,55 +1723,47 @@ const MapShow: React.FC = () => {
                       )}
                     </div>
 
-                    <div
-                      className="flex gap-1 items-center cursor-pointer"
-                      onClick={() => setShowTable("hold")}
-                    >
-                      <PipelineProgressbar
-                        title="Closure"
-                        width={90}
-                        percentage={30}
-                      />
-                      {showTable === "Closure" && (
-                        <GradeIcon fontSize={"small"} />
-                      )}
-                    </div>
-                    <div
-                      className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => setShowTable("hold")}
-                    >
-                      <PipelineProgressbar
-                        title="hold"
-                        width={90}
-                        percentage={40}
-                      />
-                      {showTable === "hold" && <GradeIcon fontSize={"small"} />}
-                    </div>
-                    <div
-                      className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => setShowTable("Retention")}
-                    >
-                      <PipelineProgressbar
-                        title="Retention"
-                        width={90}
-                        percentage={20}
-                      />
-                      {showTable === "Retention" && (
-                        <GradeIcon fontSize={"small"} />
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <PipelineProgressbar
-                        title="Closed"
-                        width={44}
-                        percentage={60}
-                      />
-                      <PipelineProgressbar
-                        title="Rejected"
-                        width={44}
-                        percentage={45}
-                      />
+                    <div className="flex items-center gap-2 w-[90%]">
+                      <div
+                        className="flex gap-1 items-center cursor-pointer w-[25%]"
+                        onClick={() => handlePipelineClick("Closed")}
+                      >
+                        <PipelineProgressbar
+                          title="Closed"
+                          width={100}
+                          percentage={60}
+                        />
+                      </div>
+                      <div
+                        className="flex gap-1 items-center cursor-pointer w-[25%] "
+                        onClick={() => handlePipelineClick("hold")}
+                      >
+                        <PipelineProgressbar
+                          title="hold"
+                          width={100}
+                          percentage={40}
+                        />
+                      </div>
+                      <div
+                        className="flex gap-1 items-center cursor-pointer w-[25%]"
+                        onClick={() => handlePipelineClick("Rejected")}
+                      >
+                        <PipelineProgressbar
+                          title="Rejected"
+                          width={100}
+                          percentage={45}
+                        />
+                      </div>
+                      <div
+                        className="flex gap-1 items-center cursor-pointer w-[25%]"
+                        onClick={() => handlePipelineClick("Retention")}
+                      >
+                        <PipelineProgressbar
+                          title="Retention"
+                          width={100}
+                          percentage={20}
+                        />
+                      </div>
                     </div>
                   </>
                 )}
@@ -1705,7 +1771,7 @@ const MapShow: React.FC = () => {
                   <>
                     <div
                       className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => setShowTable("Demo")}
+                      onClick={() => handlePipelineClick("Demo")}
                     >
                       <PipelineProgressbar
                         title="Demo"
@@ -1716,7 +1782,7 @@ const MapShow: React.FC = () => {
                     </div>
                     <div
                       className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => setShowTable("Proposal")}
+                      onClick={() => handlePipelineClick("Proposal")}
                     >
                       <PipelineProgressbar
                         title="Proposal"
@@ -1729,7 +1795,7 @@ const MapShow: React.FC = () => {
                     </div>
                     <div
                       className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => setShowTable("Negotiation")}
+                      onClick={() => handlePipelineClick("Negotiation")}
                     >
                       <PipelineProgressbar
                         title="Negotiation"
@@ -1742,7 +1808,7 @@ const MapShow: React.FC = () => {
                     </div>
                     <div
                       className="flex gap-1 items-center cursor-pointer"
-                      onClick={() => setShowTable("Closure")}
+                      onClick={() => handlePipelineClick("Closure")}
                     >
                       <PipelineProgressbar
                         title="Closure"
@@ -1771,6 +1837,7 @@ const MapShow: React.FC = () => {
                 </div>
                 <SalesMatrixTable
                   type={showTable}
+                  leadData={salesPipelineLeadData}
                   scroll={true}
                   sHeight="300px"
                 />
@@ -1900,16 +1967,8 @@ const PerformanceItem: React.FC<PerformanceItemProps> = ({ data, type }) => {
   );
 };
 
-interface TeamPerformanceProps {
-  name: string;
-  total: number;
-  current: number;
-  percentage: number;
-  status: string;
-}
-
 interface TeamPerformanceItemProps {
-  data: TeamPerformanceProps;
+  data: any;
   index: number; // Add type to the interface
 }
 
@@ -1917,44 +1976,55 @@ const TeamPerformanceItem: React.FC<TeamPerformanceItemProps> = ({
   data,
   index,
 }) => {
-  const { name, total, current, percentage, status } = data;
+  const status = data.status; // Access status from data
+
+  console.log(data);
   return (
-    <div className="col-span-4 relative  rounded-lg bg-gradient-to-b  py-6 px-3 w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm ">
-      <div className="absolute flex top-2 right-2 bg-[#204244] rounded-lg w-7 h-5  justify-center items-center">
-        <p className="text-[#80FF00] text-sm">{index}</p>
+    <div className="col-span-4 relative rounded-lg bg-gradient-to-b py-6 px-3 w-[100%] from-[#011719] shadow-2xl bg-opacity-0 backdrop-blur-sm">
+      <div className="absolute flex top-2 right-2 bg-[#204244] rounded-lg p-1  justify-center px-3 gap-2 items-center">
+        <h1 className="text-xs text-white">No of Leads</h1>
+        <p className="text-[#80FF00] text-sm">{data?.data.length}</p>
       </div>
-      <div className="absolute flex top-[50%] right-[-7px] bg-black text-white rounded-[50%] w-5 h-5  justify-center items-center">
+      <div className="absolute flex top-[50%] right-[-7px] bg-black text-white rounded-[50%] w-5 h-5 justify-center items-center">
         <ArrowRightAltIcon sx={{ fontSize: "14px" }} />
       </div>
       <div className="flex items-baseline gap-2 mb-1 mt-3">
-        <h1 className="text-[#80FF00] text-md">₹78,6545</h1>
-        <h1 className="text-[#fff] text-sm">{name}</h1>
+        {/* <h1 className="text-[#80FF00] text-md">₹78,6545</h1> */}
+        <h1 className="text-[#fff] text-sm">{data?.name}</h1>
       </div>
-      <div className="flex item center gap-1 mb-1 mt-3 ">
+      <div className="flex item-center gap-1 mb-1 mt-3">
         <h1
           className={`${
-            status === "high" ? "text-[#80FF00]" : "text-[#E03030]"
+            (data?.achievedTarget / data?.target) * 100 > 50
+              ? "text-[#80FF00]"
+              : "text-[#E03030]"
           } text-sm`}
         >
-          {percentage}%
+          {" "}
+          {Math.round((data?.achievedTarget / data?.target) * 100 * 10) / 10}%
         </h1>
         <h1 className="text-[#C4C4C4] text-sm">Target status</h1>
-        {status === "high" ? (
+        {(data?.achievedTarget / data?.target) * 100 > 50 ? (
           <ArrowUpwardIcon fontSize="small" sx={{ color: "#80FF00" }} />
         ) : (
           <ArrowDownwardIcon fontSize="small" sx={{ color: "#E03030" }} />
         )}
       </div>
-      <ProgressBar progression={percentage} width={95} />
+      <ProgressBar
+        progression={(data?.achievedTarget / data?.target) * 100}
+        width={95}
+      />
       <div className="flex justify-between w-[95%] mt-1">
         <h1
           className={`${
-            status === "high" ? "text-[#80FF00]" : "text-[#E03030]"
+            (data?.achievedTarget / data?.target) * 100 > 50
+              ? "text-[#80FF00]"
+              : "text-[#E03030]"
           } text-xs`}
         >
-          ₹{current}
+          ₹{data?.achievedTarget}
         </h1>
-        <h1 className="text-[#C4C4C4] text-xs">₹{total}</h1>
+        <h1 className="text-[#C4C4C4] text-xs">₹{data?.target}</h1>
       </div>
     </div>
   );

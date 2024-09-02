@@ -21,6 +21,7 @@ import {
 import FormAdd from "./FormAdd";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { baseURL } from "@/Constants/constants";
 
 const style = {
   position: "absolute" as "absolute",
@@ -37,6 +38,7 @@ const style = {
 interface LeadDetailsProps {
   open: boolean;
   show: (value: boolean) => void;
+  id?: string;
 }
 
 interface Task {
@@ -52,76 +54,126 @@ interface Column {
 }
 
 const initialColumns: Column[] = [
-  {
-    id: "lead-generation",
-    title: "Lead Generation",
-    tasks: [{ id: "task-1", title: "School 1", description: "Description 1" }],
-  },
-  {
-    id: "qualification",
-    title: "Qualification",
-    tasks: [],
-  },
-  {
-    id: "demo",
-    title: "Demo",
-    tasks: [],
-  },
-  {
-    id: "proposal",
-    title: "Proposal",
-    tasks: [],
-  },
-  {
-    id: "negotiation",
-    title: "Negotiation",
-    tasks: [],
-  },
-  {
-    id: "closure",
-    title: "Closure",
-    tasks: [],
-  },
-  {
-    id: "retention",
-    title: "Retention",
-    tasks: [],
-  },
+  { id: "Lead Generation", title: "Lead Generation", tasks: [] },
+  { id: "Qualification", title: "Qualification", tasks: [] },
+  { id: "Demo", title: "Demo", tasks: [] },
+  { id: "Proposal", title: "Proposal", tasks: [] },
+  { id: "Negotiation", title: "Negotiation", tasks: [] },
+  { id: "Closed", title: "Closed", tasks: [] },
+  { id: "Retention", title: "Retention", tasks: [] },
 ];
 
-export default function LeadDetails({ open, show }: LeadDetailsProps) {
+export default function LeadDetails({ open, show, id }: LeadDetailsProps) {
   const [columns, setColumns] = React.useState<Column[]>(initialColumns);
   const [showFormAdd, setShowFormAdd] = React.useState<boolean>(false);
+  const [leadData, setLeadData] = React.useState<any>({});
+  const [isUpdated, setIsUpdated] = React.useState<boolean>(false);
   const handleClose = () => show(false);
   const [forms, setForms] = React.useState<{ _id: string; title: string }[]>(
     []
   );
   const router = useRouter();
 
+  console.log(id);
+
   React.useEffect(() => {
-    const fetchForms = async () => {
+    const fetchLead = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/form");
-        setForms(response.data);
+        // Fetch lead data from the backend
+        const response = await axios.get(
+          `http://localhost:4000/singleLead?id=${id}`
+        );
+        const lead = response.data;
+
+        // Set lead data to state
+        setLeadData(lead);
+
+        // Find the column based on leadStatus and add the lead as a task
+        const updatedColumns = initialColumns.map((column) => {
+          if (column.title.toLowerCase() === lead.leadStatus.toLowerCase()) {
+            return {
+              ...column,
+              tasks: [
+                {
+                  id: lead._id,
+                  title: lead.client,
+                  description: lead.leadQuality, // Or any other relevant info
+                },
+              ],
+            };
+          }
+          return column;
+        });
+
+        // Update state with the new columns structure
+        setColumns(updatedColumns);
       } catch (error) {
-        console.error("Error fetching forms:", error);
+        console.error("Error fetching lead data:", error);
       }
     };
 
-    fetchForms();
-  }, []);
+    if (id) {
+      fetchLead();
+    }
+  }, [id, isUpdated]);
+
+  React.useEffect(() => {
+    const fetchLead = async () => {
+      try {
+        // Fetch lead data from the backend
+        const response = await axios.get(
+          `http://localhost:4000/singleLead?id=${id}`
+        );
+        const lead = response.data;
+
+        // Set lead data to state
+        setLeadData(lead);
+
+        // Update the Kanban board columns
+        setColumns((prevColumns) => {
+          // Remove lead from all columns first
+          const newColumns = prevColumns.map((column) => ({
+            ...column,
+            tasks: column.tasks.filter((task) => task.id !== lead._id),
+          }));
+
+          // Find the correct column based on leadStatus
+          const targetColumnIndex = newColumns.findIndex(
+            (column) => column.title.toLowerCase() === lead.leadStatus.toLowerCase()
+          );
+
+          if (targetColumnIndex >= 0) {
+            newColumns[targetColumnIndex].tasks.push({
+              id: lead._id,
+              title: lead.client,
+              description: lead.leadQuality, // Or any other relevant info
+            });
+          }
+
+          return newColumns;
+        });
+      } catch (error) {
+        console.error("Error fetching lead data:", error);
+      }
+    };
+
+    if (id) {
+      fetchLead();
+    }
+  }, [id, isUpdated]);
 
   const handleViewForm = (id: string) => {
     router.push(`/formPage/${id}`);
   };
 
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = async (result: DropResult) => {
     const { source, destination } = result;
 
-    // If there's no destination (dropped outside a droppable area), do nothing
+    console.log(source);
+    console.log(destination);
+
     if (!destination) return;
 
-    // If the task is dropped in the same position, do nothing
     if (
       source.droppableId === destination.droppableId &&
       source.index === destination.index
@@ -129,7 +181,19 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
       return;
     }
 
-    // Find source and destination columns
+    try {
+      const response = await axios.put(`${baseURL}/singleLead`, {
+        id: id,
+        NewLeadStatus: destination?.droppableId,
+      });
+
+      if (response.data.message === "success") {
+        setIsUpdated(!isUpdated);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
     const sourceColumnIndex = columns.findIndex(
       (col) => col.id === source.droppableId
     );
@@ -140,15 +204,22 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
     const sourceColumn = columns[sourceColumnIndex];
     const destinationColumn = columns[destinationColumnIndex];
 
-    // Remove task from source column
     const [movedTask] = sourceColumn.tasks.splice(source.index, 1);
 
-    // Insert task into destination column
     destinationColumn.tasks.splice(destination.index, 0, movedTask);
 
-    // Update columns state
     setColumns([...columns]);
   };
+
+
+  const nextIndex = leadData.leadStatus
+    ? initialColumns.findIndex((data) => data.title === leadData.leadStatus) + 1
+    : -1;
+
+  const nextStep =
+    nextIndex >= 0 && nextIndex < initialColumns.length
+      ? initialColumns[nextIndex].title
+      : "No Next Step";
 
   return (
     <div>
@@ -172,7 +243,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
               p={3}
             >
               <Typography fontSize={"1.5rem"} fontWeight={600} color={"#fff"}>
-                School Name
+                {leadData?.client}
               </Typography>
               <IconButton
                 size="small"
@@ -223,7 +294,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>Sales Rep</Typography>
-                  <Typography>Alin Anto</Typography>
+                  <Typography>{leadData?.assignedTo}</Typography>
                 </Box>
                 <Box
                   mt={2}
@@ -234,7 +305,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>Decision Maker</Typography>
-                  <Typography>Joe Doe</Typography>
+                  <Typography>{leadData?.decisionMaker}</Typography>
                 </Box>
                 <Box
                   mt={2}
@@ -245,7 +316,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>Current Vendor</Typography>
-                  <Typography>Super Vendor</Typography>
+                  <Typography>{leadData?.currentVendor}</Typography>
                 </Box>
                 <Box
                   mt={2}
@@ -256,7 +327,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>Lead Source</Typography>
-                  <Typography>Inside Sales</Typography>
+                  <Typography>{leadData?.leadSource}</Typography>
                 </Box>
                 <Box
                   mt={4}
@@ -277,7 +348,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>Street</Typography>
-                  <Typography>Street one</Typography>
+                  <Typography>{leadData?.street}</Typography>
                 </Box>
                 <Box
                   mt={2}
@@ -288,7 +359,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>City</Typography>
-                  <Typography>City one</Typography>
+                  <Typography>{leadData?.city}</Typography>
                 </Box>
                 <Box
                   mt={2}
@@ -299,7 +370,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>District</Typography>
-                  <Typography>District one</Typography>
+                  <Typography>{leadData?.district}</Typography>
                 </Box>
                 <Box
                   mt={2}
@@ -310,7 +381,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>State</Typography>
-                  <Typography>State one</Typography>
+                  <Typography>{leadData?.state}</Typography>
                 </Box>
                 <Box
                   mt={2}
@@ -321,7 +392,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>Country</Typography>
-                  <Typography>India</Typography>
+                  <Typography>{leadData?.country}</Typography>
                 </Box>
                 <Box
                   mt={2}
@@ -332,7 +403,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>Zip Code</Typography>
-                  <Typography>123456</Typography>
+                  <Typography>{leadData?.zipCode}</Typography>
                 </Box>
               </Grid>
               <Grid
@@ -377,7 +448,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                       color={"white"}
                     >
                       <Typography color={"#a8a9b4"}>Lead Quality</Typography>
-                      <Typography>Medium</Typography>
+                      <Typography>{leadData?.leadQuality}</Typography>
                     </Box>
                   </Grid>
                   <Grid item md={6}>
@@ -392,7 +463,49 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                       <Typography mb={1} color={"#a8a9b4"}>
                         Status
                       </Typography>
-                      <ProgressBar width={100} progression={40} />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          width: "100%",
+                        }}
+                      >
+                        <h1 className="text-[10px]">
+                          {leadData?.leadStatus === "Lead Generation"
+                            ? 0
+                            : leadData?.leadStatus === "Qualification"
+                            ? 20
+                            : leadData?.leadStatus === "Demo"
+                            ? 40
+                            : leadData?.leadStatus === "Proposal"
+                            ? 60
+                            : leadData?.leadStatus === "Negotiation"
+                            ? 80
+                            : leadData?.leadStatus === "Closed"
+                            ? 100
+                            : 0}
+                          %
+                        </h1>
+                        <ProgressBar
+                          width={85}
+                          progression={
+                            leadData?.leadStatus === "Lead Generation"
+                              ? 0
+                              : leadData?.leadStatus === "Qualification"
+                              ? 20
+                              : leadData?.leadStatus === "Demo"
+                              ? 40
+                              : leadData?.leadStatus === "Proposal"
+                              ? 60
+                              : leadData?.leadStatus === "Negotiation"
+                              ? 80
+                              : leadData?.leadStatus === "Closed"
+                              ? 100
+                              : 0
+                          }
+                        />
+                      </Box>
                     </Box>
                   </Grid>
                   <Grid item md={3}>
@@ -404,7 +517,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                       color={"white"}
                     >
                       <Typography color={"#a8a9b4"}>Next Step</Typography>
-                      <Typography>Demo</Typography>
+                      <Typography>{nextStep}</Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -424,24 +537,18 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                         Items
                       </Typography>
                       <Box display={"flex"} alignItems={"center"} gap={1}>
-                        <Typography
-                          sx={{ background: "#2a2b2f", p: 1, borderRadius: 1 }}
-                          mb={2}
-                        >
-                          LMS
-                        </Typography>
-                        <Typography
-                          sx={{ background: "#2a2b2f", p: 1, borderRadius: 1 }}
-                          mb={2}
-                        >
-                          ERP
-                        </Typography>
-                        <Typography
-                          sx={{ background: "#2a2b2f", p: 1, borderRadius: 1 }}
-                          mb={2}
-                        >
-                          DC
-                        </Typography>
+                        {leadData?.products?.map((data: any) => (
+                          <Typography
+                            sx={{
+                              background: "#2a2b2f",
+                              p: 1,
+                              borderRadius: 1,
+                            }}
+                            mb={2}
+                          >
+                            {data.productId.name}
+                          </Typography>
+                        ))}
                       </Box>
                     </Box>
                   </Grid>
@@ -465,7 +572,7 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                         fontSize={"1.5rem"}
                         color={"#80FF00"}
                       >
-                        ₹20,00,0000
+                        ₹{leadData?.dealValue}
                       </Typography>
                     </Box>
                   </Grid>
@@ -473,11 +580,8 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                 <Grid item md={12} gap={2} mt={3} container>
                   <DragDropContext onDragEnd={handleDragEnd}>
                     <Box
-                      //   container
-
                       display={"flex"}
                       maxHeight={"210px"}
-                      // maxWidth={"100vw"}
                       overflow={"auto"}
                       sx={{
                         // Configure grid to allow for scrolling and display 4 items per row
@@ -512,9 +616,6 @@ export default function LeadDetails({ open, show }: LeadDetailsProps) {
                                     borderRadius: 2,
                                     width: "100%",
                                     p: 2,
-                                    // minHeight: 230,
-                                    // boxShadow:
-                                    //   "0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1)",
                                     background: "#25262b",
                                   }}
                                 >

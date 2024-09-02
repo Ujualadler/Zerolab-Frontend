@@ -667,9 +667,11 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                             label="Lead Owner"
                           >
                             <MenuItem value={"Alin Anto"}>Alin Anto</MenuItem>
-                            <MenuItem value={"Jissmon"}>Jissmon</MenuItem>
-                            <MenuItem value={"Joy Sunny"}>Joy Sunny</MenuItem>
-                            <MenuItem value={"Adarsh"}>Adarsh</MenuItem>
+                            <MenuItem value={"Jissmon George"}>
+                              Jissmon
+                            </MenuItem>
+                            <MenuItem value={"Annam Giri"}>Joy Sunny</MenuItem>
+                            <MenuItem value={"Adarsh Shetty"}>Adarsh</MenuItem>
                           </Select>
                         </FormControl>
                         <FormControl fullWidth sx={selectStyle}>
@@ -707,7 +709,6 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                             <MenuItem value={"High"}>High</MenuItem>
                             <MenuItem value={"Medium"}>Medium</MenuItem>
                             <MenuItem value={"Low"}>Low</MenuItem>
-                            <MenuItem value={"Other"}>Other</MenuItem>
                           </Select>
                         </FormControl>
 
@@ -1041,12 +1042,14 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                             onChange={handleSelectChange}
                             label="Assigned To"
                           >
-                            <MenuItem value={"Joy Sony"}>Joy Sony</MenuItem>
+                            <MenuItem value={"Alin Anto"}>Alin Anto</MenuItem>
                             <MenuItem value={"Jissmon George"}>
                               Jissmon George
                             </MenuItem>
-                            <MenuItem value={"Annam Giri"}>Annam Giri</MenuItem>
-                            <MenuItem value={"Akash"}>Akash</MenuItem>
+                            <MenuItem value={"Annam Giri"}>
+                              Annam Giri Prakash
+                            </MenuItem>
+                            <MenuItem value={"Adarsh Shetty"}>Akash</MenuItem>
                           </Select>
                         </FormControl>
                         <InputLabel sx={{ color: "#4D9900", mb: "3px" }}>

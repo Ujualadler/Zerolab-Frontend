@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
+import { baseURL } from "@/Constants/constants";
 
 declare global {
   interface Window {
@@ -14,7 +15,7 @@ const GoogleLoginBtn: React.FC = () => {
 
   const handleGoogleResponse = async (response: any) => {
     try {
-      const res = await fetch("http://192.168.0.34/auth/google", {
+      const res = await fetch(`${baseURL}/auth/google`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -24,7 +25,7 @@ const GoogleLoginBtn: React.FC = () => {
 
       if (res.ok) {
         // Redirect to dashboard or any other page
-        router.push("/dashboard");
+        router.push("/");
       } else {
         alert("Login failed");
       }
@@ -33,34 +34,34 @@ const GoogleLoginBtn: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const initializeGoogleSignIn = () => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id:
-            "240091052176-v86vgp09ptl1qopbrovi1kemosjn3tb9.apps.googleusercontent.com",
-          callback: handleGoogleResponse,
-        });
+  // useEffect(() => {
+  //   const initializeGoogleSignIn = () => {
+  //     if (window.google) {
+  //       window.google.accounts.id.initialize({
+  //         client_id:
+  //           "240091052176-v86vgp09ptl1qopbrovi1kemosjn3tb9.apps.googleusercontent.com",
+  //         callback: handleGoogleResponse,
+  //       });
 
-        window.google.accounts.id.renderButton(
-          document.getElementById("google-login-btn"),
-          {
-            type: "standard",
-            theme: "filled_black",
-            size: "large",
-            text: "signin_with",
-            shape: "pill",
-          }
-        );
+  //       window.google.accounts.id.renderButton(
+  //         document.getElementById("google-login-btn"),
+  //         {
+  //           type: "standard",
+  //           theme: "filled_black",
+  //           size: "large",
+  //           text: "signin_with",
+  //           shape: "pill",
+  //         }
+  //       );
 
-        window.google.accounts.id.prompt();
-      }
-    };
+  //       window.google.accounts.id.prompt();
+  //     }
+  //   };
 
-    if (window.google) {
-      initializeGoogleSignIn();
-    }
-  }, []);
+  //   if (window.google) {
+  //     initializeGoogleSignIn();
+  //   }
+  // }, []);
 
   return (
     <>
@@ -91,7 +92,7 @@ const GoogleLoginBtn: React.FC = () => {
           }
         }}
       />
-      <div id="google-login-btn"></div>
+      <div onClick={handleGoogleResponse} id="google-login-btn"></div>
     </>
   );
 };
