@@ -274,49 +274,33 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {leadData.map((row: any, index: any) => (
-              <TableRow
-                key={index}
-                sx={{
-                  "&:last-child td, &:last-child th": { borderBottom: 0 },
-                }}
-              >
-                <TableCell
-                  onClick={() => handleSingleLeadClick(row._id)}
+            {leadData.length > 0 ? (
+              leadData.map((row: any, index: any) => (
+                <TableRow
+                  key={index}
                   sx={{
-                    color: "white",
-                    borderRight: "1px solid #5F5C5C",
-                    cursor: "pointer",
+                    "&:last-child td, &:last-child th": { borderBottom: 0 },
                   }}
-                  component="th"
-                  scope="row"
                 >
-                  {row.client}
-                </TableCell>
-                <TableCell
-                  sx={{ color: "#80FF00", borderRight: "1px solid #5F5C5C" }}
-                  align="left"
-                >
-                  <div className="flex items-baseline gap-1">
-                    <h1 className="text-[10px]">
-                      {row.leadStatus === "Lead Generation"
-                        ? 0
-                        : row.leadStatus === "Qualification"
-                        ? 20
-                        : row.leadStatus === "Demo"
-                        ? 40
-                        : row.leadStatus === "Proposal"
-                        ? 60
-                        : row.leadStatus === "Negotiation"
-                        ? 80
-                        : row.leadStatus === "Closed"
-                        ? 100
-                        : 0}
-                      %
-                    </h1>
-                    <ProgressBar
-                      progression={
-                        row.leadStatus === "Lead Generation"
+                  <TableCell
+                    onClick={() => handleSingleLeadClick(row._id)}
+                    sx={{
+                      color: "white",
+                      borderRight: "1px solid #5F5C5C",
+                      cursor: "pointer",
+                    }}
+                    component="th"
+                    scope="row"
+                  >
+                    {row.client}
+                  </TableCell>
+                  <TableCell
+                    sx={{ color: "#80FF00", borderRight: "1px solid #5F5C5C" }}
+                    align="left"
+                  >
+                    <div className="flex items-baseline gap-1">
+                      <h1 className="text-[10px]">
+                        {row.leadStatus === "Lead Generation"
                           ? 0
                           : row.leadStatus === "Qualification"
                           ? 20
@@ -328,51 +312,89 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
                           ? 80
                           : row.leadStatus === "Closed"
                           ? 100
-                          : 0
-                      }
-                      width={85}
-                    />
-                  </div>
-                </TableCell>
-                <TableCell
-                  sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
-                  align="left"
-                >
-                  {new Date(row.createdDate).toLocaleDateString("en-GB")}
-                </TableCell>
+                          : 0}
+                        %
+                      </h1>
+                      <ProgressBar
+                        progression={
+                          row.leadStatus === "Lead Generation"
+                            ? 0
+                            : row.leadStatus === "Qualification"
+                            ? 20
+                            : row.leadStatus === "Demo"
+                            ? 40
+                            : row.leadStatus === "Proposal"
+                            ? 60
+                            : row.leadStatus === "Negotiation"
+                            ? 80
+                            : row.leadStatus === "Closed"
+                            ? 100
+                            : 0
+                        }
+                        width={85}
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell
+                    sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
+                    align="left"
+                  >
+                    {new Date(row.createdDate).toLocaleDateString("en-GB")}
+                  </TableCell>
 
-                <TableCell
-                  sx={{ borderRight: "1px solid #5F5C5C", color: "#80FF00" }}
-                  align="left"
-                >
-                  ₹{row.dealValue}
-                </TableCell>
-                <TableCell
-                  sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
-                  align="left"
-                >
-                  {row.products.map((data: any) => (
-                    <h5 key={data.productId.name} className="text-white">{data.productId.name}</h5>
-                  ))}
-                </TableCell>
+                  <TableCell
+                    sx={{ borderRight: "1px solid #5F5C5C", color: "#80FF00" }}
+                    align="left"
+                  >
+                    ₹{row.dealValue}
+                  </TableCell>
+                  <TableCell
+                    sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
+                    align="left"
+                  >
+                    {row.products.map((data: any) => (
+                      <h5 key={data.productId.name} className="text-white">
+                        {data.productId.name}
+                      </h5>
+                    ))}
+                  </TableCell>
 
+                  <TableCell
+                    sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
+                    align="left"
+                  >
+                    {row.currentVendor}
+                  </TableCell>
+                  <TableCell
+                    sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
+                    align="left"
+                  >
+                    {row.noOfStudents}
+                  </TableCell>
+                  <TableCell sx={{ color: "white" }} align="left">
+                    {row.assignedTo}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
                 <TableCell
-                  sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
-                  align="left"
+                  colSpan={8}
+                  sx={{ textAlign: "center", color: "white" }}
                 >
-                  {row.currentVendor}
-                </TableCell>
-                <TableCell
-                  sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
-                  align="left"
-                >
-                  {row.noOfStudents}
-                </TableCell>
-                <TableCell sx={{ color: "white" }} align="left">
-                  {row.assignedTo}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "200px",
+                    }}
+                  >
+                    <Typography sx={{fontWeight:600,fontSize:'16px'}}>No Data</Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
