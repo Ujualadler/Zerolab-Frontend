@@ -1209,7 +1209,7 @@ const MapShow: React.FC = () => {
           >
             {leadData.length > 0 ? (
               leadData?.map((data, index) => (
-                <div className="px-3 ">
+                <div key={index} className="px-3 ">
                   <div
                     key={index}
                     className="p-2 flex items-center  justify-between w-[100%]"
