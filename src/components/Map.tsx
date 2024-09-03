@@ -1037,19 +1037,19 @@ const MapShow: React.FC = () => {
           </IconButton>
         </Box>
         {/* left section */}
-        <div className="absolute p-6 top-6 left-6 max-w-[28vw]    bg-gradient-to-r from-[#011719] shadow-2xl  bg-opacity-5  backdrop-blur-sm  rounded-2xl text-white">
-          <div className="flex m-2 ">
+        <div className="absolute  top-8 left-6 max-w-[28vw] px-1   bg-gradient-to-r from-[#011719] shadow-2xl  bg-opacity-5  backdrop-blur-sm  rounded-2xl text-white">
+          <div className="flex mx-2 mt-3 ">
             <HomeIcon className="mt-2 text-[#80FF00]" />
             <h1 className="font-medium text-md mt-2">
               Top Student Strength Schools
             </h1>
           </div>
-          <div className="flex items-center mt-4 justify-between gap-1 p-4  w-[100%] ">
+          <div className="flex items-center mt-1 justify-between gap-1 py-2  w-[100%] ">
             <Select
               value={selectedState?.name || ""} // Use state name or an empty string if none selected
               onChange={handleStateChange}
               sx={{
-                // height: "30px",
+                height: "40px",
                 bgcolor: "black",
                 color: "white",
                 fontSize: "12px",
@@ -1091,7 +1091,7 @@ const MapShow: React.FC = () => {
               }
               sx={{
                 bgcolor: "black",
-                // height: "30px",
+                height: "40px",
                 color: "white",
                 fontSize: "12px",
                 textTransform: "none",
@@ -1119,7 +1119,7 @@ const MapShow: React.FC = () => {
               }
               sx={{
                 bgcolor: "black",
-                // height: "30px",
+                height: "40px",
                 color: "white",
                 fontSize: "12px",
                 textTransform: "none",
@@ -1131,7 +1131,7 @@ const MapShow: React.FC = () => {
               value={targetFilter || ""}
               onChange={handleTargetClick}
               sx={{
-                // height: "30px",
+                height: "40px",
                 bgcolor: "black",
                 color: "white",
                 fontSize: "12px",
@@ -1209,7 +1209,7 @@ const MapShow: React.FC = () => {
           >
             {leadData.length > 0 ? (
               leadData?.map((data, index) => (
-                <>
+                <div className="px-3 ">
                   <div
                     key={index}
                     className="p-2 flex items-center  justify-between w-[100%]"
@@ -1251,7 +1251,7 @@ const MapShow: React.FC = () => {
                     </div>
                   </div>
                   <Divider className="bg-gray-500" />
-                </>
+                </div>
               ))
             ) : (
               <div className="flex justify-center items-center h-[35vh]">
@@ -1326,7 +1326,7 @@ const MapShow: React.FC = () => {
         {/* middle section  */}
 
         {/* right section */}
-        <div className="absolute right-0 top-10 w-[18vw] px-6 text-white flex flex-col items-start bg-gradient-to-b from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm rounded-lg">
+        <div className="absolute right-3 top-10 w-[18vw] px-6 text-white flex flex-col items-start bg-gradient-to-b from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm rounded-lg">
           <div className="relative w-[100%]">
             <div className="mt-3  p-4 px-6 ">
               <h1 className="text-white text-xl mb-3">Team A</h1>
