@@ -918,6 +918,19 @@ const MapShow: React.FC = () => {
     setShowTable(status);
     handleFilterChange(salesPipelineTeam, status);
   };
+  
+  function calculateLeadStatusPercentage(targetStatus: string) {
+    // Find the counts for the target status and the base status
+    const baseCount = leadData.length;
+    const targetCount =
+      leadStatusCounts.find((data: any) => data._id === targetStatus)?.count ||
+      0;
+
+    // Calculate the percentage, avoiding division by zero
+    const percentage = baseCount !== 0 ? (targetCount / baseCount) * 100 : 0;
+
+    return percentage;
+  }
 
   const handleSingleLeadClick = (id: string) => {
     setSelectedleadId(id);
@@ -932,18 +945,6 @@ const MapShow: React.FC = () => {
       100
   );
 
-  function calculateLeadStatusPercentage(targetStatus: string) {
-    // Find the counts for the target status and the base status
-    const baseCount = leadData.length;
-    const targetCount =
-      leadStatusCounts.find((data: any) => data._id === targetStatus)?.count ||
-      0;
-
-    // Calculate the percentage, avoiding division by zero
-    const percentage = baseCount !== 0 ? (targetCount / baseCount) * 100 : 0;
-
-    return percentage;
-  }
   return (
     <>
       {addLeads && <LeadAdding open={addLeads} show={setAddLeads} />}
@@ -1458,10 +1459,10 @@ const MapShow: React.FC = () => {
                   alt="logo"
                 />
                 <h3 className="text-white">Team Performance</h3>
-                <DateSelection
+                {/* <DateSelection
                   dates={circularDate}
                   setDates={setCircularDate}
-                />
+                /> */}
               </div>
             </div>
             <div className="grid grid-cols-12 gap-10 mt-10">
@@ -1574,7 +1575,7 @@ const MapShow: React.FC = () => {
               </div>
               <div className="col-span-3 grid grid-cols-12 gap-10">
                 <div className="col-span-10 rounded-lg bg-gradient-to-b px-8 p-4 w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm    text-white">
-                  <h1 className="text-lg font-bold my-3">Rising Stars</h1>
+                  <h1 className="text-lg font-bold my-3">LeaderBoard</h1>
                   {topPerformamnceData.map((data, index) => (
                     <PerformanceItem
                       key={index}

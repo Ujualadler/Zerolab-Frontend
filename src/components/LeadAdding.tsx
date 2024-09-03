@@ -135,6 +135,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
 
   const [formData, setFormData] = React.useState({
     leadOwner: "",
+    affiliationCode: "",
     leadSource: "",
     dealValue: "",
     leadQuality: "",
@@ -142,6 +143,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
     clientType: "",
     industryType: "",
     board: "",
+    description: "",
     website: "",
     products: [] as string[], // Array to hold selected product IDs
     selectedFeatures: {} as Record<string, string[]>,
@@ -868,6 +870,15 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                           onChange={handleInputChange}
                           sx={{ ...textFieldStyle }}
                         />
+                        <TextField
+                          fullWidth
+                          type="text"
+                          label="Affiliation Code"
+                          name="description"
+                          value={formData.affiliationCode}
+                          onChange={handleInputChange}
+                          sx={textFieldStyle}
+                        />
                       </Grid>
                       <Grid item md={6} px={4} spacing={3}>
                         <TextField
@@ -930,6 +941,15 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                           label="No of Students"
                           name="noOfStudents"
                           value={formData.noOfStudents}
+                          onChange={handleInputChange}
+                          sx={textFieldStyle}
+                        />
+                        <TextField
+                          fullWidth
+                          type="text"
+                          label="Description"
+                          name="description"
+                          value={formData.description}
                           onChange={handleInputChange}
                           sx={textFieldStyle}
                         />

@@ -1,7 +1,9 @@
+
 import { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Head from "next/head";
 import "./globals.css";
+import SessionProvider from "../components/sessionProvider"; 
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +22,9 @@ export default function RootLayout({
       <Head>
         <link rel="icon" href="/images/loader.png" />
       </Head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }

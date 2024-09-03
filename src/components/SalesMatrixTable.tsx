@@ -390,7 +390,15 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
                       height: "200px",
                     }}
                   >
-                    <Typography sx={{fontWeight:600,fontSize:'16px'}}>No Data</Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: "15px",
+                        color: "#80FF00",
+                      }}
+                    >
+                      No Leads To Show
+                    </Typography>
                   </Box>
                 </TableCell>
               </TableRow>

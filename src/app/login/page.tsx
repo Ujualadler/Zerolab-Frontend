@@ -14,7 +14,7 @@ const Page: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteId = typeof window !== "undefined" ? searchParams.get("inviteId") : null; // Ensure client-side execution
-  const [invite, setInvite] = useState<string | null>(null);
+  const [invite, setInvite] = useState<any>('');
 
   useEffect(() => {
     if (typeof inviteId === "string") {
@@ -35,7 +35,7 @@ const Page: React.FC = () => {
                 </h2>
               </div>
               <div className="w-[250px]">
-                <GoogleLoginBtn />
+              <GoogleLoginBtn inviteId={inviteId}/>
               </div>
             </div>
 
