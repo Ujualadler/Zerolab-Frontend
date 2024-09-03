@@ -739,18 +739,10 @@ const MapShow: React.FC = () => {
   console.log(leadData);
 
   useEffect(() => {
-    // if (
-    //   mapRef.current &&
-    //   mapRef.current.isStyleLoaded() &&
-    //   geojsonData.features.length > 0
-    // ) {
-    //   console.log(geojsonData)
-    //   const source = mapRef?.current.getSource("salesData");
     console.log(source);
     if (source) {
       (source as mapboxgl.GeoJSONSource).setData(geojsonData);
     }
-    // }
   }, [geojsonData, source]);
 
   useEffect(() => {
@@ -797,6 +789,10 @@ const MapShow: React.FC = () => {
   };
 
   const handleStateClick = (latitude: number, longitude: number) => {
+    setQueryParams((prev) => ({
+      ...prev,
+      state: "",
+    }));
     if (mapRef.current) {
       mapRef.current.flyTo({
         center: [longitude, latitude],

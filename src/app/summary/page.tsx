@@ -3,11 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl, { LngLatLike } from "mapbox-gl"; // Import LngLatLike for type checking
 import { useRouter } from "next/navigation";
+import { Box } from "@mui/material";
 import {
-  Box,
-} from "@mui/material";
-import {
-
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
   ArrowRightAlt as ArrowRightAltIcon,
@@ -15,9 +12,6 @@ import {
 
 import "react-circular-progressbar/dist/styles.css";
 import { ProgressBar } from "@/components/ProgressBar";
-
-
-
 
 type ToggleDataType = {
   name: string;
@@ -222,7 +216,7 @@ const MapShow: React.FC = () => {
 
         {/* Team performance */}
 
-        <div className="w-[100%] p-5 flex justify-center mt-44"  >
+        <div className="w-[100%] p-5 flex justify-center mt-44">
           <div className="w-[90%]">
             <div className="flex gap-10 item-center">
               <div className="flex gap-1 items-center mb-4 font-bold text-2xl">
