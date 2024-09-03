@@ -229,7 +229,9 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
 
     try {
       const response = await axios.post(`${baseURL}/lead`, formData);
-
+      if(response.data.message==='success'){
+        handleClose()
+      }
       console.log(response);
     } catch (error) {
       console.log(error);
@@ -693,7 +695,9 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                             </MenuItem>
                             <MenuItem value={"Sales"}>Sales</MenuItem>
                             <MenuItem value={"Website"}>Website</MenuItem>
-                            <MenuItem value={"Other"}>Other</MenuItem>
+                            <MenuItem value={"Inside Sales"}>Inside Sales</MenuItem>
+                            <MenuItem value={"Self"}>Self</MenuItem>
+                            <MenuItem value={"Other"}>Refferal</MenuItem>
                           </Select>
                         </FormControl>
                         <FormControl fullWidth sx={selectStyle}>
@@ -792,6 +796,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                           >
                             <MenuItem value={"CBSE"}>CBSE</MenuItem>
                             <MenuItem value={"State"}>State</MenuItem>
+                            <MenuItem value={"ICSE"}>ICSE</MenuItem>
                           </Select>
                         </FormControl>
                         <FormControl fullWidth sx={selectStyle}>
@@ -872,9 +877,9 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                         />
                         <TextField
                           fullWidth
-                          type="text"
+                          type="number"
                           label="Affiliation Code"
-                          name="description"
+                          name="affiliationCode"
                           value={formData.affiliationCode}
                           onChange={handleInputChange}
                           sx={textFieldStyle}

@@ -22,6 +22,7 @@ import axios from "axios";
 import ProfileTable from "@/components/ProfileTable";
 import { ArrowBack } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
+import { baseURL } from "@/Constants/constants";
 
 const textFieldStyle = {
   "& .MuiOutlinedInput-root": {
@@ -94,7 +95,7 @@ const Page: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/product");
+        const response = await axios.get(`${baseURL}/product`);
         const fetchedProducts = response.data.map((product: Product) => ({
           ...product,
           isEditing: false, // Add isEditing property to each product
@@ -146,7 +147,7 @@ const Page: React.FC = () => {
 
   const handleInvitation = async () => {
     try {
-      const response = await axios.post("http://localhost:4000/invitation", {
+      const response = await axios.post(`${baseURL}/invitation`, {
         emails: savedEmails,
         id: "asgjagsjgasggajs",
       });
@@ -239,7 +240,7 @@ const Page: React.FC = () => {
       let response;
       console.log(product);
       if (product._id) {
-        response = await axios.post(`http://localhost:4000/product`, {
+        response = await axios.post(`${baseURL}/product`, {
           id: product._id,
           name: product.name,
           price: product.price,
@@ -247,7 +248,7 @@ const Page: React.FC = () => {
         });
       } else {
         // Create new product
-        response = await axios.post(`http://localhost:4000/product`, {
+        response = await axios.post(`${baseURL}/product`, {
           name: product.name,
           price: product.price,
           features: product.features,

@@ -127,6 +127,7 @@ interface SalesMatrixTableProps {
   scroll: Boolean;
   sHeight: string;
   leadData?: any;
+  change:any
 }
 
 const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
@@ -134,6 +135,7 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
   scroll,
   sHeight,
   leadData,
+  change
 }) => {
   const tableRef = React.useRef<HTMLDivElement>(null); // Reference to the table container
   const [showDialog, setShowDialog] = React.useState(false);
@@ -181,6 +183,7 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
     <Box sx={{ position: "relative", padding: "16px" }}>
       {showLeadDetails && selectedLeadId && (
         <LeadDetails
+          change={change}
           show={setShowLeadDetails}
           open={showLeadDetails}
           id={selectedLeadId}
@@ -410,6 +413,7 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
       {/* Show ScrollTable as a dialog when scrolled to bottom */}
       {showDialog && scroll && (
         <ScrollTable
+          change={change}
           leadData={leadData}
           open={showDialog}
           show={setShowDialog}
@@ -434,9 +438,10 @@ interface EventDetailsProps {
   open: boolean;
   show: (value: boolean) => void;
   leadData?: any;
+  change:any
 }
 
-function ScrollTable({ open, show, leadData }: EventDetailsProps) {
+function ScrollTable({ open, show, leadData,change }: EventDetailsProps) {
   const setVhProperty = () => {
     const vh = window.innerHeight * 0.01;
     document.documentElement.style.setProperty("--vh", `${vh}px`);
@@ -611,6 +616,7 @@ function ScrollTable({ open, show, leadData }: EventDetailsProps) {
               type="nvnadbvfnbvsdnf"
               leadData={leadData}
               scroll={false}
+              change={change}
               sHeight={"calc(var(--vh, 1vh) * 56)"}
             />
           </Grid>

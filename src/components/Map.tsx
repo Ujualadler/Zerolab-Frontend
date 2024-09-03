@@ -1986,6 +1986,7 @@ const MapShow: React.FC = () => {
                   type={showTable}
                   leadData={salesPipelineLeadData}
                   scroll={true}
+                  change={setDataChange}
                   sHeight="300px"
                 />
               </div>

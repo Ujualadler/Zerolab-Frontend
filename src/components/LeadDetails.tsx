@@ -86,7 +86,7 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
       try {
         // Fetch lead data from the backend
         const response = await axios.get(
-          `http://localhost:4000/singleLead?id=${id}`
+          `${baseURL}/singleLead?id=${id}`
         );
         const lead = response.data;
 
