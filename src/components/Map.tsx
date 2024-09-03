@@ -488,10 +488,12 @@ const MapShow: React.FC = () => {
   const [activePipeline, setActivePipeline] = useState<string>("new");
   const [showLeadDetails, setShowLeadDetails] = useState<boolean>(false);
   const [strengthFilter, setStrengthFilter] = useState<boolean>(false);
+  const [dataChange, setDataChange] = useState<boolean>(false);
   const [dealValueFilter, setDealValueFilter] = useState<boolean>(false);
   const [targetFilter, setTargetFilter] = useState<string>("");
   const [source, setSource] = useState<any>("");
   const [leadData, setLeadData] = useState<ILead[]>([]);
+  const [leadPipeLineData, setLeadPipeLineData] = useState<any>([]);
   const [salesRepData, setSalesRepData] = useState<any>([]);
   const [leadStatusCounts, setLeadStatusCounts] = useState<any>([]);
   const [salesPipelineLeadData, setSalesPipelineLeadData] = useState<ILead[]>(
@@ -602,6 +604,7 @@ const MapShow: React.FC = () => {
         setLeadData(data.data);
         setSalesPipelineLeadData(data.data);
         setTeamPerformanceLeadData(data.data);
+        setLeadPipeLineData(data.data);
         setTargetCounts(data.targetCounts);
         setTargetValue(data.targetValue);
         setLeadStatusCounts(data.leadStatusCounts);
@@ -610,7 +613,7 @@ const MapShow: React.FC = () => {
       }
     }
     getLeads();
-  }, [queryParams]);
+  }, [queryParams, dataChange]);
 
   useEffect(() => {
     setQueryParams((prev) => ({
@@ -890,20 +893,38 @@ const MapShow: React.FC = () => {
     targetStatus: string,
     filteredData: any[]
   ) {
+
+    console.log(targetStatus)
+
+
+    let targetCount = filteredData.length;
+    console.log(targetCount)
     // Find the counts for the target status in the filtered data
     const baseCount = filteredData.length;
-    const targetCount = filteredData.filter(
-      (data) => data.leadStatus === targetStatus
-    ).length;
+    if (targetStatus !== "Lead Generation") {
+
+      console.log("first")
+
+      targetCount = filteredData.filter(
+        (data) => data.leadStatus === targetStatus
+      ).length;
+    }
+
+    console.log(filteredData);
+
+    console.log(targetCount);
 
     // Calculate the percentage, avoiding division by zero
     const percentage = baseCount !== 0 ? (targetCount / baseCount) * 100 : 0;
 
-    return percentage;
+    return { percentage, targetCount };
   }
 
   const handleFilterChange = (teamMember: string, status: string) => {
     let filteredData = leadData;
+
+    console.log(teamMember);
+    console.log(status);
 
     if (teamMember === "") {
       setSalesPipelineLeadData(leadData); // Show all data if the selection is empty
@@ -913,15 +934,19 @@ const MapShow: React.FC = () => {
       filteredData = leadData.filter((data) => data.assignedTo === teamMember);
     }
 
+    setLeadPipeLineData(filteredData);
+
     if (status && status !== "Lead Generation") {
       filteredData = filteredData.filter((data) => data.leadStatus === status);
     }
 
     setSalesPipelineLeadData(filteredData);
 
-    // Calculate and log the lead status percentage if a specific status is provided
     if (status) {
-      const percentage = calculateLeadStatusPercentage(status, filteredData);
+      const percentage = calculateLeadStatusPercentage(
+        status,
+        leadPipeLineData.filter((data: any) => data.assignedTo === teamMember)
+      );
       console.log(
         `Percentage of leads with status "${status}": ${percentage}%`
       );
@@ -961,6 +986,7 @@ const MapShow: React.FC = () => {
           show={setShowLeadDetails}
           open={showLeadDetails}
           id={selectedLeadId}
+          change={setDataChange}
         />
       )}
       <div
@@ -1705,10 +1731,22 @@ const MapShow: React.FC = () => {
                       <PipelineProgressbar
                         title="Lead Generation"
                         width={100}
-                        percentage={100}
+                        percentage={
+                          calculateLeadStatusPercentage(
+                            "Lead Generation",
+                            leadPipeLineData
+                          ).percentage
+                        }
                       />
                       {showTable === "Lead Generation" && (
-                        <GradeIcon fontSize={"small"} />
+                         <Typography color={"#48820E"}>
+                         {
+                           calculateLeadStatusPercentage(
+                             "Lead Generation",
+                             leadPipeLineData
+                           ).targetCount
+                         }
+                       </Typography>
                       )}
                     </div>
                     <div
@@ -1718,13 +1756,22 @@ const MapShow: React.FC = () => {
                       <PipelineProgressbar
                         title="Qualification & Initial Contact"
                         width={100}
-                        percentage={calculateLeadStatusPercentage(
-                          "Qualification",
-                          salesPipelineLeadData
-                        )}
+                        percentage={
+                          calculateLeadStatusPercentage(
+                            "Qualification",
+                            leadPipeLineData
+                          ).percentage
+                        }
                       />
                       {showTable === "Qualification" && (
-                        <GradeIcon fontSize={"small"} />
+                        <Typography color={"#48820E"}>
+                          {
+                            calculateLeadStatusPercentage(
+                              "Qualification",
+                              leadPipeLineData
+                            ).targetCount
+                          }
+                        </Typography>
                       )}
                     </div>
                     <div
@@ -1734,12 +1781,23 @@ const MapShow: React.FC = () => {
                       <PipelineProgressbar
                         title="Demo"
                         width={100}
-                        percentage={calculateLeadStatusPercentage(
-                          "Demo",
-                          salesPipelineLeadData
-                        )}
+                        percentage={
+                          calculateLeadStatusPercentage(
+                            "Demo",
+                            leadPipeLineData
+                          ).percentage
+                        }
                       />
-                      {showTable === "Demo" && <GradeIcon fontSize={"small"} />}
+                      {showTable === "Demo" && (
+                        <Typography color={"#48820E"}>
+                          {
+                            calculateLeadStatusPercentage(
+                              "Demo",
+                              leadPipeLineData
+                            ).targetCount
+                          }
+                        </Typography>
+                      )}
                     </div>
                     <div
                       className="flex gap-1 items-center cursor-pointer "
@@ -1748,13 +1806,22 @@ const MapShow: React.FC = () => {
                       <PipelineProgressbar
                         title="Proposal"
                         width={100}
-                        percentage={calculateLeadStatusPercentage(
-                          "Proposal",
-                          salesPipelineLeadData
-                        )}
+                        percentage={
+                          calculateLeadStatusPercentage(
+                            "Proposal",
+                            leadPipeLineData
+                          ).percentage
+                        }
                       />
                       {showTable === "Proposal" && (
-                        <GradeIcon fontSize={"small"} />
+                        <Typography color={"#48820E"}>
+                          {
+                            calculateLeadStatusPercentage(
+                              "Proposal",
+                              leadPipeLineData
+                            ).targetCount
+                          }
+                        </Typography>
                       )}
                     </div>
                     <div
@@ -1764,13 +1831,22 @@ const MapShow: React.FC = () => {
                       <PipelineProgressbar
                         title="Negotiation"
                         width={100}
-                        percentage={calculateLeadStatusPercentage(
-                          "Negotiation",
-                          salesPipelineLeadData
-                        )}
+                        percentage={
+                          calculateLeadStatusPercentage(
+                            "Negotiation",
+                            leadPipeLineData
+                          ).percentage
+                        }
                       />
                       {showTable === "Negotiation" && (
-                        <GradeIcon fontSize={"small"} />
+                        <Typography color={"#48820E"}>
+                          {
+                            calculateLeadStatusPercentage(
+                              "Negotiation",
+                              leadPipeLineData
+                            ).targetCount
+                          }
+                        </Typography>
                       )}
                     </div>
 
@@ -1782,10 +1858,12 @@ const MapShow: React.FC = () => {
                         <PipelineProgressbar
                           title="Closed"
                           width={100}
-                          percentage={calculateLeadStatusPercentage(
-                            "Closed",
-                            salesPipelineLeadData
-                          )}
+                          percentage={
+                            calculateLeadStatusPercentage(
+                              "Closed",
+                              leadPipeLineData
+                            ).percentage
+                          }
                         />
                       </div>
                       <div
@@ -1795,10 +1873,12 @@ const MapShow: React.FC = () => {
                         <PipelineProgressbar
                           title="hold"
                           width={100}
-                          percentage={calculateLeadStatusPercentage(
-                            "hold",
-                            salesPipelineLeadData
-                          )}
+                          percentage={
+                            calculateLeadStatusPercentage(
+                              "hold",
+                              leadPipeLineData
+                            ).percentage
+                          }
                         />
                       </div>
                       <div
@@ -1808,10 +1888,12 @@ const MapShow: React.FC = () => {
                         <PipelineProgressbar
                           title="Rejected"
                           width={100}
-                          percentage={calculateLeadStatusPercentage(
-                            "Rejected",
-                            salesPipelineLeadData
-                          )}
+                          percentage={
+                            calculateLeadStatusPercentage(
+                              "Rejected",
+                              leadPipeLineData
+                            ).percentage
+                          }
                         />
                       </div>
                       <div
@@ -1821,10 +1903,12 @@ const MapShow: React.FC = () => {
                         <PipelineProgressbar
                           title="Retention"
                           width={100}
-                          percentage={calculateLeadStatusPercentage(
-                            "Retention",
-                            salesPipelineLeadData
-                          )}
+                          percentage={
+                            calculateLeadStatusPercentage(
+                              "Retention",
+                              leadPipeLineData
+                            ).percentage
+                          }
                         />
                       </div>
                     </div>

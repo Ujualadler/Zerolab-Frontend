@@ -22,6 +22,7 @@ import FormAdd from "./FormAdd";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { baseURL } from "@/Constants/constants";
+import { Changa } from "next/font/google";
 
 const style = {
   position: "absolute" as "absolute",
@@ -39,6 +40,7 @@ interface LeadDetailsProps {
   open: boolean;
   show: (value: boolean) => void;
   id?: string;
+  change:(value: boolean) => void;
 }
 
 interface Task {
@@ -63,12 +65,15 @@ const initialColumns: Column[] = [
   { id: "Retention", title: "Retention", tasks: [] },
 ];
 
-export default function LeadDetails({ open, show, id }: LeadDetailsProps) {
+export default function LeadDetails({ open, show, id,change }: LeadDetailsProps) {
   const [columns, setColumns] = React.useState<Column[]>(initialColumns);
   const [showFormAdd, setShowFormAdd] = React.useState<boolean>(false);
   const [leadData, setLeadData] = React.useState<any>({});
   const [isUpdated, setIsUpdated] = React.useState<boolean>(false);
-  const handleClose = () => show(false);
+  const handleClose = () =>{
+    show(false);
+    change(true)
+  } 
   const [forms, setForms] = React.useState<{ _id: string; title: string }[]>(
     []
   );
