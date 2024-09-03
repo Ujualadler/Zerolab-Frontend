@@ -63,6 +63,7 @@ const initialColumns: Column[] = [
   { id: "Negotiation", title: "Negotiation", tasks: [] },
   { id: "Closed", title: "Closed", tasks: [] },
   { id: "Retention", title: "Retention", tasks: [] },
+  { id: "Rejected", title: "Rejected", tasks: [] },
 ];
 
 export default function LeadDetails({ open, show, id,change }: LeadDetailsProps) {
@@ -349,11 +350,12 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
                   display={"flex"}
                   justifyContent={"space-between"}
                   alignItems={"center"}
+                  gap={2}
                   color={"white"}
                   // bgcolor={'black'}
                 >
                   <Typography color={"#a8a9b4"}>Street</Typography>
-                  <Typography>{leadData?.street}</Typography>
+                  <Typography textAlign={'left'}>{leadData?.street}</Typography>
                 </Box>
                 <Box
                   mt={2}

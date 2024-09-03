@@ -1037,7 +1037,7 @@ const MapShow: React.FC = () => {
           </IconButton>
         </Box>
         {/* left section */}
-        <div className="absolute p-6 top-6 left-12   bg-gradient-to-r from-[#011719] shadow-2xl  bg-opacity-5  backdrop-blur-sm  rounded-2xl text-white">
+        <div className="absolute p-6 top-6 left-6 max-w-[28vw]    bg-gradient-to-r from-[#011719] shadow-2xl  bg-opacity-5  backdrop-blur-sm  rounded-2xl text-white">
           <div className="flex m-2 ">
             <HomeIcon className="mt-2 text-[#80FF00]" />
             <h1 className="font-medium text-md mt-2">
@@ -1049,10 +1049,10 @@ const MapShow: React.FC = () => {
               value={selectedState?.name || ""} // Use state name or an empty string if none selected
               onChange={handleStateChange}
               sx={{
-                height: "30px",
+                // height: "30px",
                 bgcolor: "black",
                 color: "white",
-                fontSize: "14px",
+                fontSize: "12px",
               }}
               IconComponent={(props) => (
                 <ArrowDropDownIcon {...props} style={{ color: "#80FF00" }} />
@@ -1091,9 +1091,9 @@ const MapShow: React.FC = () => {
               }
               sx={{
                 bgcolor: "black",
-                height: "30px",
+                // height: "30px",
                 color: "white",
-                fontSize: "14px",
+                fontSize: "12px",
                 textTransform: "none",
               }}
             >
@@ -1119,9 +1119,9 @@ const MapShow: React.FC = () => {
               }
               sx={{
                 bgcolor: "black",
-                height: "30px",
+                // height: "30px",
                 color: "white",
-                fontSize: "14px",
+                fontSize: "12px",
                 textTransform: "none",
               }}
             >
@@ -1131,10 +1131,10 @@ const MapShow: React.FC = () => {
               value={targetFilter || ""}
               onChange={handleTargetClick}
               sx={{
-                height: "30px",
+                // height: "30px",
                 bgcolor: "black",
                 color: "white",
-                fontSize: "14px",
+                fontSize: "12px",
               }}
               IconComponent={(props) => (
                 <ArrowDropDownIcon {...props} style={{ color: "#80FF00" }} />
@@ -1189,7 +1189,7 @@ const MapShow: React.FC = () => {
             />
           </div>
           <Box
-            height={"48vh"}
+            height={"40vh"}
             overflow={"auto"}
             sx={{
               "&::-webkit-scrollbar": {
@@ -1221,7 +1221,7 @@ const MapShow: React.FC = () => {
                       />
                       <h6
                         onClick={() => handleSingleLeadClick(data._id)}
-                        className="text-[14px] max-w-[200px] cursor-pointer"
+                        className="text-[13px] max-w-[7vw] cursor-pointer"
                       >
                         {data.client}
                       </h6>
@@ -1242,7 +1242,7 @@ const MapShow: React.FC = () => {
                       </div>
                       <div className="flex flex-col items-start gap-1">
                         <h6 className="text-[13px] text-[#80FF00]">
-                          ₹{data?.dealValue}
+                         {data.dealValue?`₹${data.dealValue}`:'No Value'} 
                         </h6>
                         <h6 className="text-[12px] text-gray-400">
                           Deal Value
