@@ -85,6 +85,7 @@ interface EventDetailsProps {
 export default function KanbanBoard({ open, show }: EventDetailsProps) {
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [showLeadDetails, setShowLeadDetails] = useState<boolean>(false);
+  const [change, setChange] = useState<boolean>(false);
 
   const setVhProperty = () => {
     const vh = window.innerHeight * 0.01;
@@ -142,7 +143,7 @@ export default function KanbanBoard({ open, show }: EventDetailsProps) {
   return (
     <React.Fragment>
       {showLeadDetails && (
-        <LeadDetails show={setShowLeadDetails} open={showLeadDetails} />
+        <LeadDetails change={setChange} show={setShowLeadDetails} open={showLeadDetails} />
       )}
       <Dialog
         open={open}
