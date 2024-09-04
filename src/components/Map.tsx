@@ -62,6 +62,7 @@ import LeadDetails from "./LeadDetails";
 import axios from "axios";
 import { baseURL } from "@/Constants/constants";
 import { fetchLeads } from "@/Service/services";
+import { LeadProgressBar } from "./LeadProgressBar";
 
 type StudentStrength = {
   region: string;
@@ -547,8 +548,12 @@ const MapShow: React.FC = () => {
 
   const topPerformamnceData: topPerformanceType[] = [
     { name: "Alin Anto", team: "Team A", amount: "17,4545", role: "Manager" },
-    { name: "Jissmon George", team: "Team A", amount: "17,4545", role: "Sales Rep" },
-  
+    {
+      name: "Jissmon George",
+      team: "Team A",
+      amount: "17,4545",
+      role: "Sales Rep",
+    },
   ];
 
   //   {
@@ -608,8 +613,7 @@ const MapShow: React.FC = () => {
         setTargetValue(data.targetValue);
         setLeadStatusCounts(data.leadStatusCounts);
         setShowTable("Lead Generation");
-        setSalesPipelineTeam('')
-
+        setSalesPipelineTeam("");
       } catch (error) {
         console.error("Failed to fetch leads:", error);
       }
@@ -653,13 +657,13 @@ const MapShow: React.FC = () => {
             "case",
             ["==", ["get", "leadStatus"], "Closed"], // Check if leadStatus is 'closed'
             7, // Green color for closed leads
-            5
+            5,
           ],
           "circle-color": [
             "case",
             ["==", ["get", "leadStatus"], "Closed"], // Check if leadStatus is 'closed'
             "rgba(104, 172, 37, 0.5)", // Green color for closed leads
-            'rgba(255, 255, 255, 0.9)', // Default color
+            "rgba(255, 255, 255, 0.9)", // Default color
           ],
         },
       });
@@ -690,10 +694,18 @@ const MapShow: React.FC = () => {
             .setHTML(
               `<div style="font-family: Arial, sans-serif; font-size: 12px; padding:10px; max-width: 200px; background: black; border-radius: 10px; color: #fff;">
                 <h4 style="margin: 0; font-size: 14px;color:#68ac25">${client}</h4>
-                <p style="margin: 5px 0;"><strong>Current Vendor:</strong> ${company}</p>
-                <p style="margin: 5px 0;"><strong>Strength:</strong> ${count}</p>
-                <p style="margin: 5px 0;"><strong>Lead Status:</strong> ${leadStatus}</p>
-                <p style="margin: 5px 0;"><strong>Deal Value:</strong> ₹${dealValue}</p>
+                <p style="margin: 5px 0;"><strong>Current Vendor:</strong> ${
+                  company ? company : "No data"
+                }</p>
+                <p style="margin: 5px 0;"><strong>Strength:</strong> ${
+                  count ? count : "No data"
+                }</p>
+                <p style="margin: 5px 0;"><strong>Lead Status:</strong> ${
+                  leadStatus ? leadStatus : "No data"
+                }</p>
+                <p style="margin: 5px 0;"><strong>Deal Value:</strong> ${
+                  dealValue ? `₹${dealValue}` : "No data"
+                }</p>
               </div>`
             )
             .addTo(map);
@@ -793,7 +805,7 @@ const MapShow: React.FC = () => {
       ...prev,
       state: "",
     }));
-    setSelectedState(null)
+    setSelectedState(null);
 
     if (mapRef.current) {
       mapRef.current.flyTo({
@@ -805,7 +817,6 @@ const MapShow: React.FC = () => {
   };
 
   const handleStateClick = (latitude: number, longitude: number) => {
- 
     if (mapRef.current) {
       mapRef.current.flyTo({
         center: [longitude, latitude],
@@ -1235,17 +1246,19 @@ const MapShow: React.FC = () => {
                     </div>
                     <div className="flex justify-between w-[12vw]">
                       <div className="flex flex-col items-start gap-1">
-                        {data?.dealValue?   <div className="flex   items-center gap-2">
-                          <h6 className="text-[13px] text-[#80FF00]">
-                            {data?.noOfStudents}
-                          </h6>
-                          <h6 className="text-[12px] text-gray-400">
-                            Students
-                          </h6>
-                        </div>: <h6 className="text-[14px]  text-red-700">
-                            No Data
-                          </h6>}
-                     
+                        {data?.dealValue ? (
+                          <div className="flex   items-center gap-2">
+                            <h6 className="text-[13px] text-[#80FF00]">
+                              {data?.noOfStudents}
+                            </h6>
+                            <h6 className="text-[12px] text-gray-400">
+                              Students
+                            </h6>
+                          </div>
+                        ) : (
+                          <h6 className="text-[14px]  text-red-700">No Data</h6>
+                        )}
+
                         <h6 className="text-[12px] text-gray-400">
                           {data.state}
                         </h6>
@@ -1341,7 +1354,7 @@ const MapShow: React.FC = () => {
             <div className="mt-3  p-4 px-6 ">
               <h1 className="text-white text-xl mb-3">Team A</h1>
               <h1 className="text-[#80FF00] text-2xl">
-                ₹{targetValue?.closed}
+              ₹{targetValue?.closed?.toLocaleString("en-IN")}
               </h1>
               <div className="flex item center gap-2 mt-2">
                 <h1 className="text-[#80FF00] text-lg">34%</h1>
@@ -1373,9 +1386,10 @@ const MapShow: React.FC = () => {
               progression={(targetValue?.closed / targetValue?.target) * 100}
               width={100}
             />
+            {/* <LeadProgressBar progression1={20} progression2={(targetValue?.closed / targetValue?.target) * 100} width={100}/> */}
             <div className="flex justify-between w-[100%] mt-1">
-              <h1 className="text-[#80FF00] text-xs">₹{targetValue?.closed}</h1>
-              <h1 className="text-[#C4C4C4] text-xs">₹{targetValue?.target}</h1>
+              <h1 className="text-[#80FF00] text-xs">₹{targetValue?.closed?.toLocaleString("en-IN")}</h1>
+              <h1 className="text-[#C4C4C4] text-xs">₹{targetValue?.target?.toLocaleString("en-IN")}</h1>
             </div>
             <div
               className="w-[100%]  mt-6 py-5 flex justify-between items-center  "
@@ -1513,7 +1527,9 @@ const MapShow: React.FC = () => {
                 <div className="col-span-12">
                   <div className="flex items-baseline gap-1 mb-1 ">
                     <h1 className="text-[#80FF00] text-2xl">
-                      ₹{targetValue?.closed}
+                      <h1 className="text-[#80FF00] text-[18px]">
+                        ₹{targetValue?.closed?.toLocaleString("en-IN")}
+                      </h1>
                     </h1>
                     <h1 className="text-[#fff] text-xl">Team A</h1>
                   </div>
@@ -1533,7 +1549,7 @@ const MapShow: React.FC = () => {
                   </div>
                   <div className="flex justify-end w-[50%] ">
                     <h1 className="text-[#C4C4C4] text-xl">
-                      ₹{targetValue?.target}
+                    ₹{targetValue?.target?.toLocaleString("en-IN")}
                     </h1>
                   </div>
                 </div>
@@ -1573,29 +1589,24 @@ const MapShow: React.FC = () => {
                     />
                   ))}
                 </div>
-             
-                
+
                 <div className="col-span-4 rounded-lg p-3 text-white bg-gradient-to-b px-8  w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm">
                   <h1 className="text-lg font-bold my-3">Steady Movers</h1>
                   <h1 className="text-center mt-10 text-sm">No Data</h1>
-
                 </div>
                 <div className="col-span-4 rounded-lg p-3 text-white bg-gradient-to-b px-8  w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm">
                   <h1 className="text-lg font-bold my-3">Slow Sellers</h1>
                   <h1 className="text-center mt-10 text-sm">No Data</h1>
-
                 </div>
                 <div className="col-span-4 rounded-lg p-3 text-white bg-gradient-to-b px-8  w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm">
                   <h1 className="text-lg font-bold my-3">Profit Leaders</h1>
                   <h1 className="text-center mt-10 text-sm">No Data</h1>
-
                 </div>
                 <div className="col-span-4 rounded-lg p-3 text-white bg-gradient-to-b px-8  w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm">
                   <h1 className="text-lg font-bold my-3">
                     Profit Contributors
                   </h1>
                   <h1 className="text-center mt-10 text-sm">No Data</h1>
-
                 </div>
               </div>
               <div className="col-span-3 grid grid-cols-12 gap-10">
@@ -1611,7 +1622,7 @@ const MapShow: React.FC = () => {
                 </div>
                 <div className="col-span-10 rounded-lg border  border-red-600 bg-gradient-to-b p-4 px-8 w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm    text-white">
                   <h1 className="text-lg font-bold my-3">Needs Attention</h1>
-                     <h1 className="text-center mt-10 text-sm">No Data</h1>
+                  <h1 className="text-center mt-10 text-sm">No Data</h1>
                 </div>
               </div>
             </div>
@@ -1851,16 +1862,16 @@ const MapShow: React.FC = () => {
                             ).percentage
                           }
                         />
-                           {showTable === "Closed" && (
-                        <Typography color={"#48820E"}>
-                          {
-                            calculateLeadStatusPercentage(
-                              "Closed",
-                              leadPipeLineData
-                            ).targetCount
-                          }
-                        </Typography>
-                      )}
+                        {showTable === "Closed" && (
+                          <Typography color={"#48820E"}>
+                            {
+                              calculateLeadStatusPercentage(
+                                "Closed",
+                                leadPipeLineData
+                              ).targetCount
+                            }
+                          </Typography>
+                        )}
                       </div>
 
                       <div
@@ -1877,16 +1888,16 @@ const MapShow: React.FC = () => {
                             ).percentage
                           }
                         />
-                                 {showTable === "Retention" && (
-                        <Typography color={"#48820E"}>
-                          {
-                            calculateLeadStatusPercentage(
-                              "Retention",
-                              leadPipeLineData
-                            ).targetCount
-                          }
-                        </Typography>
-                      )}
+                        {showTable === "Retention" && (
+                          <Typography color={"#48820E"}>
+                            {
+                              calculateLeadStatusPercentage(
+                                "Retention",
+                                leadPipeLineData
+                              ).targetCount
+                            }
+                          </Typography>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 w-[100%]">
@@ -1904,16 +1915,16 @@ const MapShow: React.FC = () => {
                             ).percentage
                           }
                         />
-                          {showTable === "Rejected" && (
-                        <Typography color={"#48820E"}>
-                          {
-                            calculateLeadStatusPercentage(
-                              "Rejected",
-                              leadPipeLineData
-                            ).targetCount
-                          }
-                        </Typography>
-                      )}
+                        {showTable === "Rejected" && (
+                          <Typography color={"#48820E"}>
+                            {
+                              calculateLeadStatusPercentage(
+                                "Rejected",
+                                leadPipeLineData
+                              ).targetCount
+                            }
+                          </Typography>
+                        )}
                       </div>
                       <div
                         className="flex gap-1 items-center cursor-pointer w-[50%] "
@@ -1929,16 +1940,16 @@ const MapShow: React.FC = () => {
                             ).percentage
                           }
                         />
-                          {showTable === "hold" && (
-                        <Typography color={"#48820E"}>
-                          {
-                            calculateLeadStatusPercentage(
-                              "hold",
-                              leadPipeLineData
-                            ).targetCount
-                          }
-                        </Typography>
-                      )}
+                        {showTable === "hold" && (
+                          <Typography color={"#48820E"}>
+                            {
+                              calculateLeadStatusPercentage(
+                                "hold",
+                                leadPipeLineData
+                              ).targetCount
+                            }
+                          </Typography>
+                        )}
                       </div>
                     </div>
                   </>
@@ -2202,9 +2213,9 @@ const TeamPerformanceItem: React.FC<TeamPerformanceItemProps> = ({
               : "text-[#E03030]"
           } text-xs`}
         >
-          ₹{data?.achievedTarget}
+          ₹{data?.achievedTarget.toLocaleString("en-IN")}
         </h1>
-        <h1 className="text-[#C4C4C4] text-xs">₹{data?.target}</h1>
+        <h1 className="text-[#C4C4C4] text-xs">₹{data?.target?.toLocaleString("en-IN")}</h1>
       </div>
     </div>
   );
