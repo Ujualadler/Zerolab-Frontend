@@ -662,7 +662,7 @@ const MapShow: React.FC = () => {
           "circle-color": [
             "case",
             ["==", ["get", "leadStatus"], "Closed"], // Check if leadStatus is 'closed'
-            "rgba(104, 172, 37, 0.5)", // Green color for closed leads
+            "rgba(104, 172, 37, 0.8)", // Green color for closed leads
             "rgba(255, 255, 255, 0.9)", // Default color
           ],
         },
@@ -1354,7 +1354,7 @@ const MapShow: React.FC = () => {
             <div className="mt-3  p-4 px-6 ">
               <h1 className="text-white text-xl mb-3">Team A</h1>
               <h1 className="text-[#80FF00] text-2xl">
-              ₹{targetValue?.closed?.toLocaleString("en-IN")}
+                ₹{targetValue?.closed?.toLocaleString("en-IN")}
               </h1>
               <div className="flex item center gap-2 mt-2">
                 <h1 className="text-[#80FF00] text-lg">34%</h1>
@@ -1376,20 +1376,37 @@ const MapShow: React.FC = () => {
             <div className="flex item center gap-1 mb-1 ">
               <h1 className="text-[#80FF00] text-sm">
                 {Math.round(
-                  (targetValue?.closed / targetValue?.target) * 100 * 10
+                  (targetValue?.closed / 28700000) * 100 * 10
                 ) / 10}
                 %
               </h1>
               <h1 className="text-[#C4C4C4] text-sm">Total target status</h1>
             </div>
-            <ProgressBar
+            <div className="flex items-center gap-1 mb-[3px]">
+                <h1 className="text-[#C4C4C4] text-xs">Achieved</h1>
+                <h1 className="text-[#00a76f] text-xs">
+                  ₹{targetValue?.closed?.toLocaleString("en-IN")}
+                </h1>
+              </div>
+        
+            {/* <ProgressBar
               progression={(targetValue?.closed / targetValue?.target) * 100}
               width={100}
+            /> */}
+            <LeadProgressBar
+              progression2={(targetValue?.target/28700000)*100}
+              progression1={(targetValue?.closed / targetValue?.target) * 100}
+              width={100}
             />
-            {/* <LeadProgressBar progression1={20} progression2={(targetValue?.closed / targetValue?.target) * 100} width={100}/> */}
             <div className="flex justify-between w-[100%] mt-1">
-              <h1 className="text-[#80FF00] text-xs">₹{targetValue?.closed?.toLocaleString("en-IN")}</h1>
-              <h1 className="text-[#C4C4C4] text-xs">₹{targetValue?.target?.toLocaleString("en-IN")}</h1>
+          
+              <h1 className="text-[#ff5630] text-xs">
+                ₹{targetValue?.target?.toLocaleString("en-IN")}
+              </h1>
+              <div className="flex items-center gap-1 mb-[3px]">
+              <h1 className="text-[#C4C4C4] text-xs">Target</h1>
+              <h1 className="text-xs text-[#C4C4C4]">₹2,87,00000</h1>
+            </div>
             </div>
             <div
               className="w-[100%]  mt-6 py-5 flex justify-between items-center  "
@@ -1494,7 +1511,7 @@ const MapShow: React.FC = () => {
             <div
               key={index}
               onClick={() => handleToggle(index, data.url)}
-              className={`text-white py-1 px-2 rounded-lg cursor-pointer text-[13px] ${
+              className={`text-white py-1 px-2 rounded-lg cursor-pointer text-[12px] ${
                 activeToggle === index ? "bg-[#48820E]" : ""
               }`}
             >
@@ -1549,7 +1566,7 @@ const MapShow: React.FC = () => {
                   </div>
                   <div className="flex justify-end w-[50%] ">
                     <h1 className="text-[#C4C4C4] text-xl">
-                    ₹{targetValue?.target?.toLocaleString("en-IN")}
+                      ₹{targetValue?.target?.toLocaleString("en-IN")}
                     </h1>
                   </div>
                 </div>
@@ -2215,7 +2232,9 @@ const TeamPerformanceItem: React.FC<TeamPerformanceItemProps> = ({
         >
           ₹{data?.achievedTarget.toLocaleString("en-IN")}
         </h1>
-        <h1 className="text-[#C4C4C4] text-xs">₹{data?.target?.toLocaleString("en-IN")}</h1>
+        <h1 className="text-[#C4C4C4] text-xs">
+          ₹{data?.target?.toLocaleString("en-IN")}
+        </h1>
       </div>
     </div>
   );

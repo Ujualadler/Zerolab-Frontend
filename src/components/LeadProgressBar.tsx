@@ -43,7 +43,7 @@ export const LeadProgressBar: React.FC<ProgressBarProps> = ({
             width: `${visibleProgression1}%`,
             borderRadius: "7px 0 0 7px",
             height: "100%",
-            backgroundColor: "#ff5630", // Fixed color for first progression
+            backgroundColor: "#00a76f", // Fixed color for first progression
             transition: "width 0.5s ease-in-out",
           }}
         ></Box>
@@ -57,7 +57,7 @@ export const LeadProgressBar: React.FC<ProgressBarProps> = ({
                 ? "0 7px 7px 0"
                 : "0",
             height: "100%",
-            backgroundColor: "#00a76f", // Fixed color for second progression
+            backgroundColor: "#ff5630", // Fixed color for second progression
             transition: "width 0.5s ease-in-out",
             position: "absolute",
             left: `${visibleProgression1}%`,
