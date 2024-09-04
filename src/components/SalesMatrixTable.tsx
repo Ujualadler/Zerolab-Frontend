@@ -349,7 +349,7 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
                     sx={{ borderRight: "1px solid #5F5C5C", color: "#80FF00" }}
                     align="left"
                   >
-                    ₹{row.dealValue}
+                    {row.dealValue?`₹${row.dealValue}`:'-----------'}
                   </TableCell>
                   <TableCell
                     sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}

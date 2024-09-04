@@ -22,6 +22,7 @@ import axios from "axios";
 import { baseURL } from "@/Constants/constants";
 import { ArrowDownward, ArrowDropDown, Business } from "@mui/icons-material";
 import { da } from "date-fns/locale";
+import ConfirmationModal from "./ConfirmationModal";
 
 const Transition = React.forwardRef(function Transition(
   props: SlideProps & { children: React.ReactElement },
@@ -75,6 +76,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
     React.useState<string>("Lead Details");
   const [products, setProducts] = React.useState<Product[]>([]);
   const [states, setStates] = React.useState<States[]>([]);
+  const [showConfirmation, setShowConfirmation] = React.useState<boolean>(false);
 
   const [showNewVendorField, setShowNewVendorField] =
     React.useState<boolean>(false);
@@ -380,6 +382,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
 
   return (
     <React.Fragment>
+      {showConfirmation&&<ConfirmationModal show={setShowConfirmation} open={showConfirmation} handle={handleSubmit}/>}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -1103,7 +1106,7 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={handleSubmit}
+                    onClick={()=>setShowConfirmation(true)}
                     sx={{
                       backgroundColor: "#4D9900",
                       color: "white",
@@ -1153,10 +1156,16 @@ export default function LeadAdding({ open, show }: EventDetailsProps) {
                     )}
                   </Box>
                   <Box sx={{ color: "white" }}>
-                    <Typography fontSize={"15px"}>Value</Typography>
-                    <Typography fontSize={"18px"} color={"#4D9900"}>
-                      ₹52,23,0000
-                    </Typography>
+                    <Typography fontSize={"15px"}>Deal Value</Typography>
+                    {formData.dealValue ? (
+                      <Typography fontSize={"15px"} color={"#4D9900"}>
+                        ₹{formData.dealValue}
+                      </Typography>
+                    ) : (
+                      <Typography fontSize={"15px"} color={"red"}>
+                        Not Added
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
                 <Box

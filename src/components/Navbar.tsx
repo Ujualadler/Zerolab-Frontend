@@ -11,7 +11,10 @@ function Navbar() {
 
   return (
     <div className="flex sticky justify-between items-center p-1 bg-gradient-to-b from-[#011719] shadow-2xl bg-opacity-0 backdrop-blur-sm w-[98vw] z-10 top-0">
+      <div className="flex items-center gap-2">
       <img src="/images/logozero.png" className="h-8 w-8 ml-4 my-3" />
+      <div><h4 className="text-white text-sm">Beta V 1.3</h4></div>
+      </div>
       <div
         onClick={handleProfile}
         className="h-9 w-9 rounded-[50%]"

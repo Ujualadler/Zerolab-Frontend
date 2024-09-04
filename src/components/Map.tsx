@@ -464,7 +464,7 @@ type topPerformanceType = {
   name: string;
   team: string;
   amount: string;
-  count: string;
+  role: string;
 };
 
 type QueryParams = {
@@ -546,10 +546,9 @@ const MapShow: React.FC = () => {
   // Define your data with type annotation
 
   const topPerformamnceData: topPerformanceType[] = [
-    { name: "Alin", team: "Team A", amount: "17,4545", count: "50" },
-    { name: "Alin", team: "Team A", amount: "17,4545", count: "50" },
-    { name: "Alin", team: "Team A", amount: "17,4545", count: "50" },
-    { name: "Alin", team: "Team A", amount: "17,4545", count: "50" },
+    { name: "Alin Anto", team: "Team A", amount: "17,4545", role: "Manager" },
+    { name: "Jissmon George", team: "Team A", amount: "17,4545", role: "Sales Rep" },
+  
   ];
 
   //   {
@@ -893,17 +892,14 @@ const MapShow: React.FC = () => {
     targetStatus: string,
     filteredData: any[]
   ) {
-
-    console.log(targetStatus)
-
+    console.log(targetStatus);
 
     let targetCount = filteredData.length;
-    console.log(targetCount)
+    console.log(targetCount);
     // Find the counts for the target status in the filtered data
     const baseCount = filteredData.length;
     if (targetStatus !== "Lead Generation") {
-
-      console.log("first")
+      console.log("first");
 
       targetCount = filteredData.filter(
         (data) => data.leadStatus === targetStatus
@@ -1037,7 +1033,7 @@ const MapShow: React.FC = () => {
           </IconButton>
         </Box>
         {/* left section */}
-        <div className="absolute  top-8 left-6 max-w-[28vw] px-1   bg-gradient-to-r from-[#011719] shadow-2xl  bg-opacity-5  backdrop-blur-sm  rounded-2xl text-white">
+        <div className="absolute  top-8 left-6 max-w-[30vw] px-1 pb-4  bg-gradient-to-r from-[#011719] shadow-2xl  bg-opacity-5  backdrop-blur-sm  rounded-2xl text-white">
           <div className="flex mx-2 mt-3 ">
             <HomeIcon className="mt-2 text-[#80FF00]" />
             <h1 className="font-medium text-md mt-2">
@@ -1221,7 +1217,7 @@ const MapShow: React.FC = () => {
                       />
                       <h6
                         onClick={() => handleSingleLeadClick(data._id)}
-                        className="text-[13px] max-w-[7vw] cursor-pointer"
+                        className="text-[13px] max-w-[9vw] cursor-pointer"
                       >
                         {data.client}
                       </h6>
@@ -1242,7 +1238,7 @@ const MapShow: React.FC = () => {
                       </div>
                       <div className="flex flex-col items-start gap-1">
                         <h6 className="text-[13px] text-[#80FF00]">
-                         {data.dealValue?`₹${data.dealValue}`:'No Value'} 
+                          {data.dealValue ? `₹${data.dealValue}` : "No Value"}
                         </h6>
                         <h6 className="text-[12px] text-gray-400">
                           Deal Value
@@ -1263,7 +1259,7 @@ const MapShow: React.FC = () => {
         {/* left section */}
 
         {/* middle section  */}
-        <div className="absolute top-5 left-[40%] gap-3 flex flex-col items-center">
+        <div className="absolute top-5 transform -translate-x-1/2 left-1/2  gap-3 flex flex-col items-center">
           <div className="flex items-center gap-2">
             <Select
               value={"India"}
@@ -1465,12 +1461,12 @@ const MapShow: React.FC = () => {
         {/* right section */}
 
         {/* draggable togglebar  */}
-        <div className="fixed bottom-2 z-50 left-[25%] bg-[#68AC25] rounded-xl p-2 px-2 flex item-center gap-2">
+        <div className="fixed bottom-2 z-50 transform -translate-x-1/2 left-1/2 bg-[#68AC25] rounded-xl p-2  flex item-center gap-1">
           {toggleData.map((data, index) => (
             <div
               key={index}
               onClick={() => handleToggle(index, data.url)}
-              className={`text-white p-2 rounded-lg cursor-pointer text-sm ${
+              className={`text-white p-2 rounded-lg cursor-pointer text-[13px] ${
                 activeToggle === index ? "bg-[#48820E]" : ""
               }`}
             >
@@ -1499,7 +1495,7 @@ const MapShow: React.FC = () => {
               </div>
             </div>
             <div className="grid grid-cols-12 gap-10 mt-10">
-              <div className="col-span-8">
+              <div className="col-span-12">
                 <div className="col-span-12">
                   <div className="flex items-baseline gap-1 mb-1 ">
                     <h1 className="text-[#80FF00] text-2xl">
@@ -1512,7 +1508,7 @@ const MapShow: React.FC = () => {
                       progression={
                         (targetValue?.closed / targetValue?.target) * 100
                       }
-                      width={80}
+                      width={50}
                     />
                     <h1 className="text-[#80FF00] text-xl">
                       {Math.round(
@@ -1521,7 +1517,7 @@ const MapShow: React.FC = () => {
                       %
                     </h1>
                   </div>
-                  <div className="flex justify-end w-[80%] ">
+                  <div className="flex justify-end w-[50%] ">
                     <h1 className="text-[#C4C4C4] text-xl">
                       ₹{targetValue?.target}
                     </h1>
@@ -1553,7 +1549,7 @@ const MapShow: React.FC = () => {
             </div>
             <div className="grid grid-cols-12 gap-10 ">
               <div className="col-span-9 grid grid-cols-12 gap-10">
-                <div className="col-span-4 p-3 text-white">
+                <div className="col-span-4 rounded-lg p-3 text-white bg-gradient-to-b px-8  w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm">
                   <h1 className="text-lg font-bold my-3">Top Performers</h1>
                   {topPerformamnceData.map((data, index) => (
                     <PerformanceItem
@@ -1563,51 +1559,33 @@ const MapShow: React.FC = () => {
                     />
                   ))}
                 </div>
-                <div className="col-span-4 p-3 text-white">
+             
+                
+                <div className="col-span-4 rounded-lg p-3 text-white bg-gradient-to-b px-8  w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm">
                   <h1 className="text-lg font-bold my-3">Steady Movers</h1>
-                  {topPerformamnceData.map((data, index) => (
-                    <PerformanceItem
-                      key={index}
-                      data={data}
-                      type={"steady movers"}
-                    />
-                  ))}
+                  <h1 className="text-center mt-10 text-sm">No Data</h1>
+
                 </div>
-                <div className="col-span-4 p-3 text-white">
+                <div className="col-span-4 rounded-lg p-3 text-white bg-gradient-to-b px-8  w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm">
                   <h1 className="text-lg font-bold my-3">Slow Sellers</h1>
-                  {topPerformamnceData.map((data, index) => (
-                    <PerformanceItem
-                      key={index}
-                      data={data}
-                      type={"slow sellers"}
-                    />
-                  ))}
+                  <h1 className="text-center mt-10 text-sm">No Data</h1>
+
                 </div>
-                <div className="col-span-4 p-3 text-white">
+                <div className="col-span-4 rounded-lg p-3 text-white bg-gradient-to-b px-8  w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm">
                   <h1 className="text-lg font-bold my-3">Profit Leaders</h1>
-                  {topPerformamnceData.map((data, index) => (
-                    <PerformanceItem
-                      key={index}
-                      data={data}
-                      type={"Profit Leaders"}
-                    />
-                  ))}
+                  <h1 className="text-center mt-10 text-sm">No Data</h1>
+
                 </div>
-                <div className="col-span-4 p-3 text-white">
+                <div className="col-span-4 rounded-lg p-3 text-white bg-gradient-to-b px-8  w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm">
                   <h1 className="text-lg font-bold my-3">
                     Profit Contributors
                   </h1>
-                  {topPerformamnceData.map((data, index) => (
-                    <PerformanceItem
-                      key={index}
-                      data={data}
-                      type={"Profit Contributors"}
-                    />
-                  ))}
+                  <h1 className="text-center mt-10 text-sm">No Data</h1>
+
                 </div>
               </div>
               <div className="col-span-3 grid grid-cols-12 gap-10">
-                <div className="col-span-10 rounded-lg bg-gradient-to-b px-8 p-4 w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm    text-white">
+                <div className="col-span-10 rounded-lg border border-white bg-gradient-to-b px-8 p-4 w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm    text-white">
                   <h1 className="text-lg font-bold my-3">LeaderBoard</h1>
                   {topPerformamnceData.map((data, index) => (
                     <PerformanceItem
@@ -1619,13 +1597,7 @@ const MapShow: React.FC = () => {
                 </div>
                 <div className="col-span-10 rounded-lg border  border-red-600 bg-gradient-to-b p-4 px-8 w-[100%] from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm    text-white">
                   <h1 className="text-lg font-bold my-3">Needs Attention</h1>
-                  {topPerformamnceData.map((data, index) => (
-                    <PerformanceItem
-                      key={index}
-                      data={data}
-                      type={"needs attention"}
-                    />
-                  ))}
+                     <h1 className="text-center mt-10 text-sm">No Data</h1>
                 </div>
               </div>
             </div>
@@ -1635,7 +1607,7 @@ const MapShow: React.FC = () => {
 
         {/* sales pipeline */}
 
-        <div className="w-[100%] mt-16 p-5 flex justify-center">
+        <div className="w-[100%] mt-16 p-3 flex justify-center">
           <div className="w-[90%]">
             <div className="flex gap-10 item-center">
               <div className="flex gap-1 items-center mb-4 font-bold text-2xl">
@@ -1683,7 +1655,7 @@ const MapShow: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-12 gap-12">
+            <div className="grid grid-cols-12 gap-8">
               <div className="col-span-4 mt-6 flex flex-col gap-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-white text-lg mb-4">Sales Pipeline</h3>
@@ -1739,14 +1711,14 @@ const MapShow: React.FC = () => {
                         }
                       />
                       {showTable === "Lead Generation" && (
-                         <Typography color={"#48820E"}>
-                         {
-                           calculateLeadStatusPercentage(
-                             "Lead Generation",
-                             leadPipeLineData
-                           ).targetCount
-                         }
-                       </Typography>
+                        <Typography color={"#48820E"}>
+                          {
+                            calculateLeadStatusPercentage(
+                              "Lead Generation",
+                              leadPipeLineData
+                            ).targetCount
+                          }
+                        </Typography>
                       )}
                     </div>
                     <div
@@ -1852,7 +1824,7 @@ const MapShow: React.FC = () => {
 
                     <div className="flex items-center gap-2 w-[100%]">
                       <div
-                        className="flex gap-1 items-center cursor-pointer w-[25%]"
+                        className="flex gap-1 items-center cursor-pointer w-[50%]"
                         onClick={() => handlePipelineClick("Closed")}
                       >
                         <PipelineProgressbar
@@ -1865,39 +1837,20 @@ const MapShow: React.FC = () => {
                             ).percentage
                           }
                         />
-                      </div>
-                      <div
-                        className="flex gap-1 items-center cursor-pointer w-[25%] "
-                        onClick={() => handlePipelineClick("hold")}
-                      >
-                        <PipelineProgressbar
-                          title="hold"
-                          width={100}
-                          percentage={
+                           {showTable === "Closed" && (
+                        <Typography color={"#48820E"}>
+                          {
                             calculateLeadStatusPercentage(
-                              "hold",
+                              "Closed",
                               leadPipeLineData
-                            ).percentage
+                            ).targetCount
                           }
-                        />
+                        </Typography>
+                      )}
                       </div>
+
                       <div
-                        className="flex gap-1 items-center cursor-pointer w-[25%]"
-                        onClick={() => handlePipelineClick("Rejected")}
-                      >
-                        <PipelineProgressbar
-                          title="Rejected"
-                          width={100}
-                          percentage={
-                            calculateLeadStatusPercentage(
-                              "Rejected",
-                              leadPipeLineData
-                            ).percentage
-                          }
-                        />
-                      </div>
-                      <div
-                        className="flex gap-1 items-center cursor-pointer w-[25%]"
+                        className="flex gap-1 items-center cursor-pointer w-[50%]"
                         onClick={() => handlePipelineClick("Retention")}
                       >
                         <PipelineProgressbar
@@ -1910,6 +1863,68 @@ const MapShow: React.FC = () => {
                             ).percentage
                           }
                         />
+                                 {showTable === "Retention" && (
+                        <Typography color={"#48820E"}>
+                          {
+                            calculateLeadStatusPercentage(
+                              "Retention",
+                              leadPipeLineData
+                            ).targetCount
+                          }
+                        </Typography>
+                      )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 w-[100%]">
+                      <div
+                        className="flex gap-1 items-center cursor-pointer w-[50%]"
+                        onClick={() => handlePipelineClick("Rejected")}
+                      >
+                        <PipelineProgressbar
+                          title="Rejected"
+                          width={100}
+                          percentage={
+                            calculateLeadStatusPercentage(
+                              "Rejected",
+                              leadPipeLineData
+                            ).percentage
+                          }
+                        />
+                          {showTable === "Rejected" && (
+                        <Typography color={"#48820E"}>
+                          {
+                            calculateLeadStatusPercentage(
+                              "Rejected",
+                              leadPipeLineData
+                            ).targetCount
+                          }
+                        </Typography>
+                      )}
+                      </div>
+                      <div
+                        className="flex gap-1 items-center cursor-pointer w-[50%] "
+                        onClick={() => handlePipelineClick("hold")}
+                      >
+                        <PipelineProgressbar
+                          title="Hold"
+                          width={100}
+                          percentage={
+                            calculateLeadStatusPercentage(
+                              "hold",
+                              leadPipeLineData
+                            ).percentage
+                          }
+                        />
+                          {showTable === "hold" && (
+                        <Typography color={"#48820E"}>
+                          {
+                            calculateLeadStatusPercentage(
+                              "hold",
+                              leadPipeLineData
+                            ).targetCount
+                          }
+                        </Typography>
+                      )}
                       </div>
                     </div>
                   </>
@@ -1997,7 +2012,7 @@ const MapShow: React.FC = () => {
         {/* sales pipeline */}
 
         {/* ROI */}
-        <div className="w-[100%] mt-16 p-5 flex justify-center">
+        <div className="w-[100%] mt-16 p-3 flex justify-center">
           <div className="w-[90%]">
             <div className="flex gap-10 item-center">
               <div className="flex gap-1 items-center mb-4 font-bold text-2xl">
@@ -2009,8 +2024,9 @@ const MapShow: React.FC = () => {
                 <h3 className="text-white">ROI</h3>
                 <div className="flex items-center ml-6  justify-around gap-3 ">
                   <Select
-                    value={"India"}
-                    // className="h-10 bg-black text-white text-[14px] "
+                    value={salesPipelineTeam}
+                    onChange={handleSalesPipeline}
+                    displayEmpty
                     sx={{
                       height: "30px",
                       bgcolor: "black",
@@ -2024,9 +2040,11 @@ const MapShow: React.FC = () => {
                       />
                     )}
                   >
-                    <MenuItem value="India">Overall (team)</MenuItem>
-                    <MenuItem value="Pakistan">Harold Das</MenuItem>
-                    <MenuItem value="Pakistan">Leo Das</MenuItem>
+                    <MenuItem value="">Overall (team)</MenuItem>
+                    <MenuItem value="Alin Anto">Alin Anto</MenuItem>
+                    <MenuItem value="Jissmon George">Jissmon George</MenuItem>
+                    <MenuItem value="Annam Giri">Annam Giri</MenuItem>
+                    <MenuItem value="Adarsh Shetty">Adarsh Shetty</MenuItem>
                   </Select>
                   <DateSelection
                     dates={circularDate}
@@ -2072,7 +2090,7 @@ interface PerformanceData {
   name: string;
   team: string;
   amount: string;
-  count: string;
+  role: string;
 }
 
 interface PerformanceItemProps {
@@ -2088,8 +2106,8 @@ const PerformanceItem: React.FC<PerformanceItemProps> = ({ data, type }) => {
       }}
     >
       <h1>{data.name}</h1>
-      <h1>{data.team}</h1>
-      <h1
+      {/* <h1>{data.team}</h1> */}
+      {/* <h1
         className={`${
           type === "needs attention"
             ? "text-[#E03030]"
@@ -2099,7 +2117,7 @@ const PerformanceItem: React.FC<PerformanceItemProps> = ({ data, type }) => {
         }`}
       >
         ₹{data.amount}
-      </h1>
+      </h1> */}
       <span
         className={`${
           type === "needs attention"
@@ -2109,7 +2127,7 @@ const PerformanceItem: React.FC<PerformanceItemProps> = ({ data, type }) => {
             : "text-[#80FF00] "
         } bg-gradient-to-b p-3 from-[#011719] shadow-2xl  bg-opacity-0  backdrop-blur-sm rounded-md`}
       >
-        {data.count}
+        {data.role}
       </span>
     </div>
   );
