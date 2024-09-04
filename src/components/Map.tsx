@@ -1233,7 +1233,7 @@ const MapShow: React.FC = () => {
                         {data.client}
                       </h6>
                     </div>
-                    <div className="flex gap-5">
+                    <div className="flex justify-between w-[12vw]">
                       <div className="flex flex-col items-start gap-1">
                         {data?.dealValue?   <div className="flex   items-center gap-2">
                           <h6 className="text-[13px] text-[#80FF00]">
