@@ -63,7 +63,7 @@ const teamPerformanceData: TeamPerformanceProps[] = [
     demoFixed: 19,
     noOfVisit: 52,
     place: "Delhi,UP,Karntaka,MP,Chattisgarh",
-    demoDone: 18,
+    demoDone: 10,
     demoScheduled: 6,
     transferToManager: 1,
     referenceCollected:
