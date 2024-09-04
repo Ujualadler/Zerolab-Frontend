@@ -61,14 +61,14 @@ const teamPerformanceData: TeamPerformanceProps[] = [
     percentage: 0,
     status: "low",
     demoFixed: 19,
-    noOfVisit: 53,
+    noOfVisit: 52,
     place: "Delhi,UP,Karntaka,MP,Chattisgarh",
-    demoDone: 5,
-    demoScheduled: 4,
-    transferToManager: 2,
+    demoDone: 18,
+    demoScheduled: 6,
+    transferToManager: 1,
     referenceCollected:
-      "St Georges School Malad, Begur diocese Schools of Carmelite sisters",
-    projection: "41,00,000",
+      "3",
+    projection: "10,00,000",
   },
   {
     name: "Annam Giri",
@@ -76,30 +76,30 @@ const teamPerformanceData: TeamPerformanceProps[] = [
     current: 0,
     percentage: 0,
     status: "high",
-    demoFixed: 13,
+    demoFixed: 16,
     noOfVisit: 61,
-    place: "visakhapatnam , viijayawada , ongole",
-    demoDone: 7,
-    demoScheduled: 7,
-    transferToManager: 9,
+    place: "visakhapatnam",
+    demoDone: 6,
+    demoScheduled: 4,
+    transferToManager: 7,
     referenceCollected:
-      "St Georges School Malad, Begur diocese Schools of Carmelite sisters",
-    projection: "60,40,000",
+      "",
+    projection: "10,00,000",
   },
   {
-    name: "Joy Sony",
+    name: "Alin Anto",
     total: 0,
     current: 0,
     percentage: 0,
     status: "low",
-    demoFixed: 0,
-    noOfVisit: 0,
+    demoFixed: 7,
+    noOfVisit: 35,
     place: "No visit",
-    demoDone: 0,
-    demoScheduled: 0,
+    demoDone: 10,
+    demoScheduled: 6,
     transferToManager: 0,
-    referenceCollected: "",
-    projection: "No data",
+    referenceCollected: "13",
+    projection: "12,00,000",
   },
   {
     name: "Adarsh Shetty",
@@ -140,7 +140,7 @@ const MapShow: React.FC = () => {
   const router = useRouter();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map>();
-  const [activeToggle, setActiveToggle] = useState<number>(2);
+  const [activeToggle, setActiveToggle] = useState<number>(6);
 
   const handleToggle = (index: number, url: string) => {
     setActiveToggle(index);
@@ -199,12 +199,12 @@ const MapShow: React.FC = () => {
         {/* middle section  */}
 
         {/* draggable togglebar  */}
-        <div className="fixed bottom-10 z-50 left-[30%] bg-[#68AC25] rounded-xl p-2 px-2 flex item-center gap-2">
+        <div className="fixed bottom-2 z-50 transform -translate-x-1/2 left-1/2 bg-[#68AC25] rounded-xl p-2  flex item-center ">
           {toggleData.map((data, index) => (
             <div
               key={index}
               onClick={() => handleToggle(index, data.url)}
-              className={`text-white p-2 rounded-lg cursor-pointer text-sm ${
+              className={`text-white py-1 px-2 rounded-lg cursor-pointer text-[13px] ${
                 activeToggle === index ? "bg-[#48820E]" : ""
               }`}
             >
@@ -221,7 +221,7 @@ const MapShow: React.FC = () => {
             <div className="flex gap-10 item-center">
               <div className="flex gap-1 items-center mb-4 font-bold text-2xl">
                 <img src="/images/logozero.png" className="h-6 w-6 " />
-                <h3 className="text-white">Team Performance(Quarter 2)</h3>
+                <h3 className="text-white">Team Summary</h3>
               </div>
             </div>
             <div className="grid grid-cols-12 gap-10 mt-10">
@@ -264,32 +264,7 @@ const TeamPerformanceItem: React.FC<{
       <div className="flex items-baseline gap-2 mb-1 mt-3">
         <h1 className="text-[#fff] text-md">{name}</h1>
       </div>
-      <div className="flex item center gap-1 mb-1 mt-3 ">
-        <h1
-          className={`${
-            status === "high" ? "text-[#80FF00]" : "text-[#E03030]"
-          } text-md`}
-        >
-          {percentage}%
-        </h1>
-        <h1 className="text-[#C4C4C4] text-md">Target status</h1>
-        {status === "high" ? (
-          <ArrowUpwardIcon fontSize="small" sx={{ color: "#80FF00" }} />
-        ) : (
-          <ArrowDownwardIcon fontSize="small" sx={{ color: "#E03030" }} />
-        )}
-      </div>
-      <ProgressBar progression={percentage} width={95} />
-      <div className="flex justify-between w-[95%] mt-1">
-        <h1
-          className={`${
-            status === "high" ? "text-[#80FF00]" : "text-[#E03030]"
-          } text-md`}
-        >
-          ₹{current}
-        </h1>
-        <h1 className="text-[#C4C4C4] text-md">₹{total}</h1>
-      </div>
+  
       <div
         className="flex justify-between w-[95%] text-sm mt-5 pt-1 text-white"
         // style={{ borderTop: "1px dashed white" }}

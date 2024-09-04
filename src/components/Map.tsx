@@ -607,6 +607,9 @@ const MapShow: React.FC = () => {
         setTargetCounts(data.targetCounts);
         setTargetValue(data.targetValue);
         setLeadStatusCounts(data.leadStatusCounts);
+        setShowTable("Lead Generation");
+        setSalesPipelineTeam('')
+
       } catch (error) {
         console.error("Failed to fetch leads:", error);
       }
@@ -646,12 +649,17 @@ const MapShow: React.FC = () => {
         type: "circle",
         source: "salesData",
         paint: {
-          "circle-radius": 8,
+          "circle-radius": [
+            "case",
+            ["==", ["get", "leadStatus"], "Closed"], // Check if leadStatus is 'closed'
+            7, // Green color for closed leads
+            5
+          ],
           "circle-color": [
             "case",
             ["==", ["get", "leadStatus"], "Closed"], // Check if leadStatus is 'closed'
-            "#68ac25", // Green color for closed leads
-            "#fff", // Default color
+            "rgba(104, 172, 37, 0.5)", // Green color for closed leads
+            'rgba(255, 255, 255, 0.9)', // Default color
           ],
         },
       });
@@ -781,6 +789,12 @@ const MapShow: React.FC = () => {
   const initialZoom = 3.8;
 
   const handleResetMap = () => {
+    setQueryParams((prev) => ({
+      ...prev,
+      state: "",
+    }));
+    setSelectedState(null)
+
     if (mapRef.current) {
       mapRef.current.flyTo({
         center: initialCenter,
@@ -791,10 +805,7 @@ const MapShow: React.FC = () => {
   };
 
   const handleStateClick = (latitude: number, longitude: number) => {
-    setQueryParams((prev) => ({
-      ...prev,
-      state: "",
-    }));
+ 
     if (mapRef.current) {
       mapRef.current.flyTo({
         center: [longitude, latitude],
@@ -1224,14 +1235,17 @@ const MapShow: React.FC = () => {
                     </div>
                     <div className="flex gap-5">
                       <div className="flex flex-col items-start gap-1">
-                        <div className="flex   items-center gap-2">
-                          <h6 className="text-[14px] text-[#80FF00]">
+                        {data?.dealValue?   <div className="flex   items-center gap-2">
+                          <h6 className="text-[13px] text-[#80FF00]">
                             {data?.noOfStudents}
                           </h6>
                           <h6 className="text-[12px] text-gray-400">
                             Students
                           </h6>
-                        </div>
+                        </div>: <h6 className="text-[14px]  text-red-700">
+                            No Data
+                          </h6>}
+                     
                         <h6 className="text-[12px] text-gray-400">
                           {data.state}
                         </h6>
@@ -1461,12 +1475,12 @@ const MapShow: React.FC = () => {
         {/* right section */}
 
         {/* draggable togglebar  */}
-        <div className="fixed bottom-2 z-50 transform -translate-x-1/2 left-1/2 bg-[#68AC25] rounded-xl p-2  flex item-center gap-1">
+        <div className="fixed bottom-2 z-50 transform -translate-x-1/2 left-1/2 bg-[#68AC25] rounded-xl p-2  flex item-center ">
           {toggleData.map((data, index) => (
             <div
               key={index}
               onClick={() => handleToggle(index, data.url)}
-              className={`text-white p-2 rounded-lg cursor-pointer text-[13px] ${
+              className={`text-white py-1 px-2 rounded-lg cursor-pointer text-[13px] ${
                 activeToggle === index ? "bg-[#48820E]" : ""
               }`}
             >
