@@ -544,7 +544,7 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
                         Items
                       </Typography>
                       <Box display={"flex"} alignItems={"center"} gap={1}>
-                        {leadData?.products?.map((data: any, index: any) => (
+                        {leadData.products?.length>0&&leadData?.products?.map((data: any, index: any) => (
                           <Typography
                             key={data._id}
                             sx={{
@@ -554,7 +554,7 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
                             }}
                             mb={2}
                           >
-                            {data.productId.name}
+                            {data?.productId?.name}
                           </Typography>
                         ))}
                       </Box>
