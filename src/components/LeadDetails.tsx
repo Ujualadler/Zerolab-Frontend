@@ -72,8 +72,8 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
   const [leadData, setLeadData] = React.useState<any>({});
   const [isUpdated, setIsUpdated] = React.useState<boolean>(false);
   const handleClose = () =>{
-    show(false);
     change(true)
+    show(false);
   } 
   const [forms, setForms] = React.useState<{ _id: string; title: string }[]>(
     []
@@ -93,6 +93,7 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
 
         // Set lead data to state
         setLeadData(lead);
+        setForms(lead.forms)
 
         // Find the column based on leadStatus and add the lead as a task
         const updatedColumns = initialColumns.map((column) => {
@@ -123,51 +124,7 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
     }
   }, [id, isUpdated]);
 
-  React.useEffect(() => {
-    const fetchLead = async () => {
-      try {
-        // Fetch lead data from the backend
-        const response = await axios.get(
-          `http://localhost:4000/singleLead?id=${id}`
-        );
-        const lead = response.data;
 
-        // Set lead data to state
-        setLeadData(lead);
-
-        // Update the Kanban board columns
-        setColumns((prevColumns) => {
-          // Remove lead from all columns first
-          const newColumns = prevColumns.map((column) => ({
-            ...column,
-            tasks: column.tasks.filter((task) => task.id !== lead._id),
-          }));
-
-          // Find the correct column based on leadStatus
-          const targetColumnIndex = newColumns.findIndex(
-            (column) =>
-              column.title.toLowerCase() === lead.leadStatus.toLowerCase()
-          );
-
-          if (targetColumnIndex >= 0) {
-            newColumns[targetColumnIndex].tasks.push({
-              id: lead._id,
-              title: lead.client,
-              description: lead.leadQuality, // Or any other relevant info
-            });
-          }
-
-          return newColumns;
-        });
-      } catch (error) {
-        console.error("Error fetching lead data:", error);
-      }
-    };
-
-    if (id) {
-      fetchLead();
-    }
-  }, [id, isUpdated]);
 
   const handleViewForm = (id: string) => {
     router.push(`/formPage/${id}`);
@@ -175,48 +132,68 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
 
   const handleDragEnd = async (result: DropResult) => {
     const { source, destination } = result;
-
-    console.log(source);
-    console.log(destination);
-
+  
+    // If there is no destination (dropped outside a column), return early.
     if (!destination) return;
-
+  
+    // If dropped in the same position, no need to change the state
     if (
       source.droppableId === destination.droppableId &&
       source.index === destination.index
     ) {
       return;
     }
-
-    try {
-      const response = await axios.put(`${baseURL}/singleLead`, {
-        id: id,
-        NewLeadStatus: destination?.droppableId,
-      });
-
-      if (response.data.message === "success") {
-        setIsUpdated(!isUpdated);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-
+  
+    // Find the source and destination columns
     const sourceColumnIndex = columns.findIndex(
       (col) => col.id === source.droppableId
     );
     const destinationColumnIndex = columns.findIndex(
       (col) => col.id === destination.droppableId
     );
-
+  
     const sourceColumn = columns[sourceColumnIndex];
     const destinationColumn = columns[destinationColumnIndex];
-
-    const [movedTask] = sourceColumn.tasks.splice(source.index, 1);
-
-    destinationColumn.tasks.splice(destination.index, 0, movedTask);
-
-    setColumns([...columns]);
+  
+    // Clone the tasks to avoid directly mutating state
+    const sourceTasks = [...sourceColumn.tasks];
+    const destinationTasks = [...destinationColumn.tasks];
+  
+    // Remove the task from the source column
+    const [movedTask] = sourceTasks.splice(source.index, 1);
+  
+    // Add the task to the destination column
+    destinationTasks.splice(destination.index, 0, movedTask);
+  
+    // Update the columns with the modified tasks
+    const newColumns = [...columns];
+    newColumns[sourceColumnIndex] = {
+      ...sourceColumn,
+      tasks: sourceTasks,
+    };
+    newColumns[destinationColumnIndex] = {
+      ...destinationColumn,
+      tasks: destinationTasks,
+    };
+  
+    setColumns(newColumns);
+  
+    // Optionally, update backend or perform any necessary actions after moving the task
+    try {
+      const response = await axios.put(`${baseURL}/singleLead`, {
+        id: id,
+        NewLeadStatus: destination?.droppableId,
+      });
+  
+      if (response.data.message === "success") {
+        setIsUpdated(!isUpdated); 
+        change(true)// Trigger a re-fetch if needed
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
+  
 
   const nextIndex = leadData.leadStatus
     ? initialColumns.findIndex((data) => data.title === leadData.leadStatus) + 1
@@ -229,7 +206,7 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
 
   return (
     <div>
-      {showFormAdd && <FormAdd show={setShowFormAdd} open={showFormAdd} />}
+      {showFormAdd && <FormAdd id={leadData?._id} show={setShowFormAdd} open={showFormAdd} />}
       <Modal
         open={open}
         onClose={handleClose}
@@ -575,13 +552,20 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
                       <Typography mb={1} color={"#a8a9b4"}>
                         Value
                       </Typography>
-                      <Typography
+                      {leadData?.dealValue?    <Typography
                         fontWeight={700}
                         fontSize={"1.5rem"}
                         color={"#80FF00"}
                       >
                         ₹{leadData?.dealValue}
-                      </Typography>
+                      </Typography>:    <Typography
+                        fontWeight={700}
+                        fontSize={"1.rem"}
+                        color={"red"}
+                      >
+                        Not Added
+                      </Typography>}
+                  
                     </Box>
                   </Grid>
                 </Grid>
@@ -721,7 +705,7 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
                                                     : column.title ===
                                                       "Negotiation"
                                                     ? 80
-                                                    : column.title === "Closure"
+                                                    : column.title === "Closed"
                                                     ? 100
                                                     : 0
                                                 }

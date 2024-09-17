@@ -59,9 +59,9 @@ const KanbanBoard = dynamic(() => import("./KanbanBoard"), { ssr: false });
 import { FeatureCollection, Feature, Point, GeoJsonProperties } from "geojson";
 import dynamic from "next/dynamic";
 import LeadDetails from "./LeadDetails";
-import axios from "axios";
+import axios, { all } from "axios";
 import { baseURL } from "@/Constants/constants";
-import { fetchLeads } from "@/Service/services";
+import { fetchLeads, fetchPipeLineLeads } from "@/Service/services";
 import { LeadProgressBar } from "./LeadProgressBar";
 
 type StudentStrength = {
@@ -475,6 +475,7 @@ type QueryParams = {
   status: string;
   strength: string;
   dealValue: string;
+  searchQuery: string;
 };
 
 // Main component
@@ -490,6 +491,7 @@ const MapShow: React.FC = () => {
   const [showLeadDetails, setShowLeadDetails] = useState<boolean>(false);
   const [strengthFilter, setStrengthFilter] = useState<boolean>(false);
   const [dataChange, setDataChange] = useState<boolean>(false);
+  const [pipeLineDataChange, setPipeLineDataChange] = useState<boolean>(false);
   const [dealValueFilter, setDealValueFilter] = useState<boolean>(false);
   const [targetFilter, setTargetFilter] = useState<string>("");
   const [source, setSource] = useState<any>("");
@@ -497,9 +499,10 @@ const MapShow: React.FC = () => {
   const [leadPipeLineData, setLeadPipeLineData] = useState<any>([]);
   const [salesRepData, setSalesRepData] = useState<any>([]);
   const [leadStatusCounts, setLeadStatusCounts] = useState<any>([]);
-  const [salesPipelineLeadData, setSalesPipelineLeadData] = useState<ILead[]>(
-    []
-  );
+  const [pipelinePercentages, setPipelinePercentages] = useState<any>({});
+  const [pipelineTargetCounts, setPipelineTargetCounts] = useState<any>({});
+  const [salesPipelineLeadData, setSalesPipelineLeadData] = useState<any>([]);
+  const [matrixTableData, setMatrixTableData] = useState<any>([]);
   const [teamPerformanceLeadData, setTeamPerformanceLeadData] = useState<
     ILead[]
   >([]);
@@ -511,6 +514,7 @@ const MapShow: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [salesPipelineTeam, setSalesPipelineTeam] = useState<string>("");
   const [selectedLeadId, setSelectedleadId] = useState<string>("");
+  const [filteredLeads, setFilteredLeads] = useState<ILead[]>([]);
 
   const [circularDate, setCircularDate] = useState<DateRange>({
     startDate: new Date(new Date().setMonth(new Date().getMonth() - 6)),
@@ -535,6 +539,13 @@ const MapShow: React.FC = () => {
     status: "",
     strength: "down",
     dealValue: "down",
+    searchQuery: "",
+  });
+  const [pipelineQueryParams, setPipelineQueryParams] = useState<any>({
+    from: mainDate.startDate, // Set as Date object
+    to: mainDate.endDate, // Set as Date object
+    teamMember: "",
+    status: "",
   });
 
   const handleToggle = (index: number, url: string) => {
@@ -556,43 +567,6 @@ const MapShow: React.FC = () => {
     },
   ];
 
-  //   {
-  //     company: "Entab",
-  //     coordinates: [
-  //       { latitude: "25.343", longitude: "71.111" },
-  //       { latitude: "31.347", longitude: "75.112" },
-  //       { latitude: "21.348", longitude: "75.134" },
-  //       { latitude: "31.1471", longitude: "76.3412" },
-  //       { latitude: "32.1471", longitude: "77.3412" },
-  //       { latitude: "23.1471", longitude: "71.3412" },
-  //       { latitude: "24.1471", longitude: "72.3412" },
-  //       { latitude: "25.1471", longitude: "73.3412" },
-  //       { latitude: "26.1471", longitude: "76.3412" },
-  //       { latitude: "27.1471", longitude: "73.3412" },
-  //       { latitude: "24.1471", longitude: "72.3412" },
-  //       { latitude: "10.1632", longitude: "76.6413" },
-  //       { latitude: "11.8745", longitude: "75.7804" },
-  //       { latitude: "19.0861", longitude: "82.0188" },
-  //       { latitude: "26.9124", longitude: "75.7873" },
-  //       { latitude: "31.1048", longitude: "77.1734" },
-  //       { latitude: "27.2412", longitude: "79.0609" },
-  //       { latitude: "", longitude: "" },
-  //       { latitude: "", longitude: "" },
-  //     ],
-  //   },
-  //   {
-  //     company: "Next",
-  //     coordinates: [
-  //       { latitude: "24.343", longitude: "72.111" },
-  //       { latitude: "23.34545", longitude: "72.125" },
-  //       { latitude: "26.348", longitude: "75.134" },
-  //       { latitude: "22.7196", longitude: "75.8577" },
-  //       { latitude: "16.5062", longitude: "16.5062" }, // Corrected the longitude format
-  //       { latitude: "17.6868", longitude: "83.2185" },
-  //       { latitude: "19.0760", longitude: "72.8777" },
-  //     ],
-  //   },
-  // ];
   const [geojsonData, setGeojsonData] = useState<
     FeatureCollection<Point, GeoJsonProperties>
   >({
@@ -606,9 +580,7 @@ const MapShow: React.FC = () => {
         const data = await fetchLeads(queryParams);
         console.log(data);
         setLeadData(data.data);
-        setSalesPipelineLeadData(data.data);
         setTeamPerformanceLeadData(data.data);
-        setLeadPipeLineData(data.data);
         setTargetCounts(data.targetCounts);
         setTargetValue(data.targetValue);
         setLeadStatusCounts(data.leadStatusCounts);
@@ -622,7 +594,50 @@ const MapShow: React.FC = () => {
   }, [queryParams, dataChange]);
 
   useEffect(() => {
+    if (leadData.length > 0) {
+      const filteredLeads = leadData.filter((lead: any) => {
+        const matchesSearchQuery = Object.values(lead).some((value) => {
+          if (typeof value === "string") {
+            return value.toLowerCase().includes(searchQuery.toLowerCase());
+          }
+          if (typeof value === "number") {
+            return value === Number(searchQuery);
+          }
+          return false;
+        });
+
+        return matchesSearchQuery;
+      });
+
+      setFilteredLeads(filteredLeads);
+    }
+  }, [searchQuery, leadData]);
+
+  useEffect(() => {
+    async function getSalesPipelineLeads() {
+      try {
+        const data = await fetchPipeLineLeads(pipelineQueryParams);
+        setSalesPipelineLeadData(data);
+        setMatrixTableData(data.data);
+        setPipelinePercentages(data.percentages);
+        setPipelineTargetCounts(data.targetCounts);
+      } catch (error) {
+        console.error("Failed to fetch leads:", error);
+      }
+    }
+    getSalesPipelineLeads();
+  }, [pipelineQueryParams, pipeLineDataChange]);
+  console.log(salesPipelineLeadData);
+  console.log(matrixTableData);
+
+  useEffect(() => {
     setQueryParams((prev) => ({
+      ...prev,
+      from: mainDate.startDate,
+      to: mainDate.endDate,
+    }));
+
+    setPipelineQueryParams((prev: any) => ({
       ...prev,
       from: mainDate.startDate,
       to: mainDate.endDate,
@@ -786,6 +801,10 @@ const MapShow: React.FC = () => {
   // Handle input change
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
+    setQueryParams((prev) => ({
+      ...prev,
+      searchQuery: event.target.value, // Update the search query
+    }));
   };
 
   const handleZoomIn = () => {
@@ -896,6 +915,8 @@ const MapShow: React.FC = () => {
   const handleTargetClick = (event: SelectChangeEvent<string>) => {
     setTargetFilter(event.target.value);
 
+    console.log(event.target.value);
+
     setQueryParams((prev) => ({
       ...prev,
       status: event.target.value,
@@ -938,48 +959,25 @@ const MapShow: React.FC = () => {
     return { percentage, targetCount };
   }
 
-  const handleFilterChange = (teamMember: string, status: string) => {
-    let filteredData = leadData;
-
-    console.log(teamMember);
-    console.log(status);
-
-    if (teamMember === "") {
-      setSalesPipelineLeadData(leadData); // Show all data if the selection is empty
-    } else if (teamMember === "Alin Anto") {
-      filteredData = leadData.filter((data) => data.assignedTo === "Alin Anto");
-    } else {
-      filteredData = leadData.filter((data) => data.assignedTo === teamMember);
-    }
-
-    setLeadPipeLineData(filteredData);
-
-    if (status && status !== "Lead Generation") {
-      filteredData = filteredData.filter((data) => data.leadStatus === status);
-    }
-
-    setSalesPipelineLeadData(filteredData);
-
-    if (status) {
-      const percentage = calculateLeadStatusPercentage(
-        status,
-        leadPipeLineData.filter((data: any) => data.assignedTo === teamMember)
-      );
-      console.log(
-        `Percentage of leads with status "${status}": ${percentage}%`
-      );
-    }
-  };
-
   const handleSalesPipeline = (e: SelectChangeEvent<string>) => {
     setSalesPipelineTeam(e.target.value);
 
-    handleFilterChange(e.target.value, showTable);
+    // setPipelineQueryParams()
+    setPipelineQueryParams((prev: any) => ({
+      ...prev,
+      teamMember: e.target.value,
+    }));
+
+    // handleFilterChange(e.target.value, showTable);
   };
 
   const handlePipelineClick = (status: string) => {
     setShowTable(status);
-    handleFilterChange(salesPipelineTeam, status);
+    setPipelineQueryParams((prev: any) => ({
+      ...prev,
+      status: status,
+    }));
+    // handleFilterChange(salesPipelineTeam, status);
   };
 
   const handleSingleLeadClick = (id: string) => {
@@ -1162,6 +1160,7 @@ const MapShow: React.FC = () => {
               <MenuItem value="">All Leads</MenuItem>
               <MenuItem value="target">Target</MenuItem>
               <MenuItem value="closed">Closed</MenuItem>
+              <MenuItem value="rejected">Rejected</MenuItem>
             </Select>
           </div>
           <div className="w-[100%] flex px-4 mb-2">
@@ -1225,8 +1224,8 @@ const MapShow: React.FC = () => {
               },
             }}
           >
-            {leadData.length > 0 ? (
-              leadData?.map((data, index) => (
+            {filteredLeads.length > 0 ? (
+              filteredLeads?.map((data, index) => (
                 <div key={index} className="px-3 ">
                   <div
                     key={index}
@@ -1334,12 +1333,14 @@ const MapShow: React.FC = () => {
               </h1>
               <h1 className="text-[#C4C4C4] text-[12px]">Closed</h1>
             </div>
-            {/* <div className="flex items-center gap-1">
-              <span className="rounded-[50%] h-2 w-2 bg-[#E53939]"></span>
-              <h1 className="text-[#E53939] text-[12px]">94</h1>
-              <h1 className="text-[#C4C4C4] text-[12px]">Not Closed</h1>
-            </div> */}
             <div className="flex items-center gap-1">
+              <span className="rounded-[50%] h-2 w-2 bg-[#E53939]"></span>
+              <h1 className="text-[#E53939] text-[12px]">
+                {targetCounts.rejected}
+              </h1>
+              <h1 className="text-[#C4C4C4] text-[12px]">Rejected</h1>
+            </div>
+            <div className="flex items-center  gap-1">
               <span className="rounded-[50%] h-2 w-2 bg-[#fff]"></span>
               <h1 className="text-[#fff] text-[12px]">{targetCounts.target}</h1>
               <h1 className="text-[#C4C4C4] text-[12px]">Target</h1>
@@ -1373,40 +1374,43 @@ const MapShow: React.FC = () => {
             </div>
           </div>
           <div className="mt-10 w-[100%]">
-            <div className="flex item center gap-1 mb-1 ">
-              <h1 className="text-[#80FF00] text-sm">
-                {Math.round(
-                  (targetValue?.closed / 28700000) * 100 * 10
-                ) / 10}
-                %
-              </h1>
-              <h1 className="text-[#C4C4C4] text-sm">Total target status</h1>
-            </div>
-            <div className="flex items-center gap-1 mb-[3px]">
+            <div className="flex justify-between gap-1 mb-1 ">
+              <div className="flex items-start flex-col gap-1 mb-[3px]">
                 <h1 className="text-[#C4C4C4] text-xs">Achieved</h1>
                 <h1 className="text-[#00a76f] text-xs">
                   ₹{targetValue?.closed?.toLocaleString("en-IN")}
                 </h1>
               </div>
-        
+              <div className="flex items-end flex-col gap-1 mb-[3px]">
+                <h1 className="text-[#80FF00] text-sm">
+                  {Math.round((targetValue?.closed / 28700000) * 100 * 10) / 10}
+                  %
+                </h1>
+                <h1 className="text-[#C4C4C4] text-xs">Total target status</h1>
+              </div>
+            </div>
+
             {/* <ProgressBar
               progression={(targetValue?.closed / targetValue?.target) * 100}
               width={100}
             /> */}
             <LeadProgressBar
-              progression2={(targetValue?.target/28700000)*100}
-              progression1={(targetValue?.closed / targetValue?.target) * 100}
+              achieved={(targetValue?.closed / 28700000) * 100}
+              total={(targetValue?.target / 28700000) * 100}
+              target={(28700000 / 28700000) * 100}
               width={100}
             />
             <div className="flex justify-between w-[100%] mt-1">
-          
-              <h1 className="text-[#ff5630] text-xs">
-                ₹{targetValue?.target?.toLocaleString("en-IN")}
-              </h1>
-              <div className="flex items-center gap-1 mb-[3px]">
-              <h1 className="text-[#C4C4C4] text-xs">Target</h1>
-              <h1 className="text-xs text-[#C4C4C4]">₹2,87,00000</h1>
-            </div>
+              <div className="flex  gap-1 mb-[3px] items-start flex-col ">
+                <h1 className="text-[#C4C4C4] text-xs">Total Lead</h1>
+                <h1 className="text-[#ffa500] text-xs">
+                  ₹{targetValue?.target?.toLocaleString("en-IN")}
+                </h1>
+              </div>
+              <div className="flex justify-end  items-end flex-col gap-1 mb-[3px]">
+                <h1 className="text-[#C4C4C4] text-xs">Target</h1>
+                <h1 className="text-xs text-[#ff5630]">₹2,87,00000</h1>
+              </div>
             </div>
             <div
               className="w-[100%]  mt-6 py-5 flex justify-between items-center  "
@@ -1551,10 +1555,10 @@ const MapShow: React.FC = () => {
                     <h1 className="text-[#fff] text-xl">Team A</h1>
                   </div>
                   <div className="flex gap-2 items-baseline">
-                    <ProgressBar
-                      progression={
-                        (targetValue?.closed / targetValue?.target) * 100
-                      }
+                    <LeadProgressBar
+                      achieved={(targetValue?.closed / 28700000) * 100}
+                      total={(targetValue?.target / 28700000) * 100}
+                      target={(28700000 / 28700000) * 100}
                       width={50}
                     />
                     <h1 className="text-[#80FF00] text-xl">
@@ -1738,237 +1742,50 @@ const MapShow: React.FC = () => {
                 </div>
                 {activePipeline === "new" && (
                   <>
-                    <div
-                      className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => handlePipelineClick("Lead Generation")}
-                    >
-                      <PipelineProgressbar
-                        title="Lead Generation"
-                        width={100}
-                        percentage={
-                          calculateLeadStatusPercentage(
-                            "Lead Generation",
-                            leadPipeLineData
-                          ).percentage
-                        }
-                      />
-                      {showTable === "Lead Generation" && (
-                        <Typography color={"#48820E"}>
-                          {
-                            calculateLeadStatusPercentage(
-                              "Lead Generation",
-                              leadPipeLineData
-                            ).targetCount
-                          }
-                        </Typography>
-                      )}
-                    </div>
-                    <div
-                      className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => handlePipelineClick("Qualification")}
-                    >
-                      <PipelineProgressbar
-                        title="Qualification & Initial Contact"
-                        width={100}
-                        percentage={
-                          calculateLeadStatusPercentage(
-                            "Qualification",
-                            leadPipeLineData
-                          ).percentage
-                        }
-                      />
-                      {showTable === "Qualification" && (
-                        <Typography color={"#48820E"}>
-                          {
-                            calculateLeadStatusPercentage(
-                              "Qualification",
-                              leadPipeLineData
-                            ).targetCount
-                          }
-                        </Typography>
-                      )}
-                    </div>
-                    <div
-                      className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => handlePipelineClick("Demo")}
-                    >
-                      <PipelineProgressbar
-                        title="Demo"
-                        width={100}
-                        percentage={
-                          calculateLeadStatusPercentage(
-                            "Demo",
-                            leadPipeLineData
-                          ).percentage
-                        }
-                      />
-                      {showTable === "Demo" && (
-                        <Typography color={"#48820E"}>
-                          {
-                            calculateLeadStatusPercentage(
-                              "Demo",
-                              leadPipeLineData
-                            ).targetCount
-                          }
-                        </Typography>
-                      )}
-                    </div>
-                    <div
-                      className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => handlePipelineClick("Proposal")}
-                    >
-                      <PipelineProgressbar
-                        title="Proposal"
-                        width={100}
-                        percentage={
-                          calculateLeadStatusPercentage(
-                            "Proposal",
-                            leadPipeLineData
-                          ).percentage
-                        }
-                      />
-                      {showTable === "Proposal" && (
-                        <Typography color={"#48820E"}>
-                          {
-                            calculateLeadStatusPercentage(
-                              "Proposal",
-                              leadPipeLineData
-                            ).targetCount
-                          }
-                        </Typography>
-                      )}
-                    </div>
-                    <div
-                      className="flex gap-1 items-center cursor-pointer "
-                      onClick={() => handlePipelineClick("Negotiation")}
-                    >
-                      <PipelineProgressbar
-                        title="Negotiation"
-                        width={100}
-                        percentage={
-                          calculateLeadStatusPercentage(
-                            "Negotiation",
-                            leadPipeLineData
-                          ).percentage
-                        }
-                      />
-                      {showTable === "Negotiation" && (
-                        <Typography color={"#48820E"}>
-                          {
-                            calculateLeadStatusPercentage(
-                              "Negotiation",
-                              leadPipeLineData
-                            ).targetCount
-                          }
-                        </Typography>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 w-[100%]">
+                    {[
+                      "Lead Generation",
+                      "Qualification",
+                      "Demo",
+                      "Proposal",
+                      "Negotiation",
+                      "Closed",
+                      "Retention",
+                      "Rejected",
+                      "Hold",
+                    ].map((stage) => (
                       <div
-                        className="flex gap-1 items-center cursor-pointer w-[50%]"
-                        onClick={() => handlePipelineClick("Closed")}
+                        key={stage}
+                        className="flex gap-1 items-center cursor-pointer "
+                        onClick={
+                          stage === "Lead Generation"
+                            ? () => handlePipelineClick("")
+                            : () => handlePipelineClick(stage)
+                        }
                       >
-                        <PipelineProgressbar
-                          title="Closed"
-                          width={100}
-                          percentage={
-                            calculateLeadStatusPercentage(
-                              "Closed",
-                              leadPipeLineData
-                            ).percentage
-                          }
-                        />
-                        {showTable === "Closed" && (
-                          <Typography color={"#48820E"}>
-                            {
-                              calculateLeadStatusPercentage(
-                                "Closed",
-                                leadPipeLineData
-                              ).targetCount
-                            }
-                          </Typography>
-                        )}
+                        <div
+                          className="w-[100%] rounded-[7px]"
+                          style={{
+                            border:
+                              showTable === ""
+                                ? stage === "Lead Generation"
+                                  ? "3px solid white"
+                                  : ""
+                                : showTable === stage
+                                ? "3px solid white"
+                                : "",
+                          }}
+                        >
+                          <PipelineProgressbar
+                            title={stage}
+                            width={100}
+                            percentage={pipelinePercentages[stage] || 0}
+                          />
+                        </div>
+                        <Typography color={"#48820E"}>
+                          {pipelineTargetCounts[stage] || 0}
+                        </Typography>
                       </div>
-
-                      <div
-                        className="flex gap-1 items-center cursor-pointer w-[50%]"
-                        onClick={() => handlePipelineClick("Retention")}
-                      >
-                        <PipelineProgressbar
-                          title="Retention"
-                          width={100}
-                          percentage={
-                            calculateLeadStatusPercentage(
-                              "Retention",
-                              leadPipeLineData
-                            ).percentage
-                          }
-                        />
-                        {showTable === "Retention" && (
-                          <Typography color={"#48820E"}>
-                            {
-                              calculateLeadStatusPercentage(
-                                "Retention",
-                                leadPipeLineData
-                              ).targetCount
-                            }
-                          </Typography>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 w-[100%]">
-                      <div
-                        className="flex gap-1 items-center cursor-pointer w-[50%]"
-                        onClick={() => handlePipelineClick("Rejected")}
-                      >
-                        <PipelineProgressbar
-                          title="Rejected"
-                          width={100}
-                          percentage={
-                            calculateLeadStatusPercentage(
-                              "Rejected",
-                              leadPipeLineData
-                            ).percentage
-                          }
-                        />
-                        {showTable === "Rejected" && (
-                          <Typography color={"#48820E"}>
-                            {
-                              calculateLeadStatusPercentage(
-                                "Rejected",
-                                leadPipeLineData
-                              ).targetCount
-                            }
-                          </Typography>
-                        )}
-                      </div>
-                      <div
-                        className="flex gap-1 items-center cursor-pointer w-[50%] "
-                        onClick={() => handlePipelineClick("hold")}
-                      >
-                        <PipelineProgressbar
-                          title="Hold"
-                          width={100}
-                          percentage={
-                            calculateLeadStatusPercentage(
-                              "hold",
-                              leadPipeLineData
-                            ).percentage
-                          }
-                        />
-                        {showTable === "hold" && (
-                          <Typography color={"#48820E"}>
-                            {
-                              calculateLeadStatusPercentage(
-                                "hold",
-                                leadPipeLineData
-                              ).targetCount
-                            }
-                          </Typography>
-                        )}
-                      </div>
-                    </div>
+                    ))}
                   </>
                 )}
                 {activePipeline === "upselling" && (
@@ -2041,9 +1858,14 @@ const MapShow: React.FC = () => {
                 </div>
                 <SalesMatrixTable
                   type={showTable}
-                  leadData={salesPipelineLeadData}
+                  allData={salesPipelineLeadData}
+                  completeData={leadData}
+                  leadData={matrixTableData}
+                  filter={pipelineQueryParams}
+                  setFilter={setPipelineQueryParams}
+                  brief={true}
                   scroll={true}
-                  change={setDataChange}
+                  change={() => setPipeLineDataChange((prev) => !prev)}
                   sHeight="300px"
                 />
               </div>

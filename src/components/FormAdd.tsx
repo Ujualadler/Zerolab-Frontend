@@ -26,6 +26,7 @@ const style = {
 };
 
 interface FormAddProps {
+  id:string;
   open: boolean;
   show: (value: boolean) => void;
 }
@@ -46,7 +47,7 @@ interface FormField {
   ratingValue?: number;
 }
 
-const FormAdd: React.FC<FormAddProps> = ({ open, show }) => {
+const FormAdd: React.FC<FormAddProps> = ({ open, show,id }) => {
   const [formFields, setFormFields] = React.useState<FormField[]>([]);
   const [nextId, setNextId] = React.useState(1);
   const [previewMode, setPreviewMode] = React.useState(false);
@@ -99,7 +100,8 @@ const FormAdd: React.FC<FormAddProps> = ({ open, show }) => {
       // Prepare the data to be sent to the backend
       const formData = {
         title: formTitle, // The title of the form
-        fields: formFields, // The form fields array
+        fields: formFields,
+        id:id // The form fields array
       };
 
       console.log(formData);

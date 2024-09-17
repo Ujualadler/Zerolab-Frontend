@@ -3,27 +3,57 @@ import React from "react";
 import { Box, Tooltip } from "@mui/material";
 
 interface ProgressBarProps {
-  progression1: number; // First progression percentage
-  progression2: number; // Second progression percentage
+  total: number; // Total lead value percentage
+  target: number; // Target percentage
+  achieved: number; // Achieved percentage
   width: number; // Total width of the progress bar
 }
 
 export const LeadProgressBar: React.FC<ProgressBarProps> = ({
-  progression1,
-  progression2,
+  total,
+  target,
+  achieved,
   width,
 }) => {
-  // Cap the progressions to 100 if they exceed
-  const cappedProgression1 = Math.min(progression1, 100);
-  const cappedProgression2 = Math.min(progression2, 100);
+  // Find the maximum value among total, target, and achieved
+  const maxValue = Math.max(total, target, achieved);
 
-  // Ensure both bars are visible even if one progression is greater than 100
-  const visibleProgression1 = Math.min(progression1, 100);
-  const visibleProgression2 = Math.min(progression2, 100 - visibleProgression1);
+  console.log(total, target, achieved);
+
+  // Calculate the width of each bar relative to the maximum value, capped at 100%
+  const totalWidth = (total / maxValue) * 100;
+  const targetWidth = (target / maxValue) * 100;
+  const achievedWidth = (achieved / maxValue) * 100;
+
+  console.log(totalWidth);
+  console.log(targetWidth);
+  console.log(achievedWidth);
+
+  // Create an array of widths to determine z-index values
+  const widths = [
+    { width: totalWidth, zIndex: 0 },
+    { width: targetWidth, zIndex: 0 },
+    { width: achievedWidth, zIndex: 0 },
+  ];
+
+  // Sort widths descending to assign z-index (highest width gets z-index 1, etc.)
+  widths.sort((a, b) => b.width - a.width);
+
+  // Assign z-index values
+  widths[0].zIndex = 1; // Largest width gets z-index 1
+  widths[1].zIndex = 2; // Middle width gets z-index 2
+  widths[2].zIndex = 3; // Smallest width gets z-index 3
+
+  // Extract the z-index values based on the sorted order
+  const zIndexTotal = widths[0].width === totalWidth ? 1 : widths[1].width === totalWidth ? 2 : 3;
+  const zIndexTarget = widths[0].width === targetWidth ? 1 : widths[1].width === targetWidth ? 2 : 3;
+  const zIndexAchieved = widths[0].width === achievedWidth ? 1 : widths[1].width === achievedWidth ? 2 : 3;
+
+  console.log(zIndexTotal, zIndexTarget, zIndexAchieved);
 
   return (
     <Tooltip
-      title={`Progress 1: ${cappedProgression1}%, Progress 2: ${cappedProgression2}%`}
+      title={`Total: ${total}%, Target: ${target}%, Achieved: ${achieved}%`}
     >
       <Box
         sx={{
@@ -37,30 +67,45 @@ export const LeadProgressBar: React.FC<ProgressBarProps> = ({
           position: "relative",
         }}
       >
-        {/* First Progression */}
+        {/* Total Progression */}
         <Box
           sx={{
-            width: `${visibleProgression1}%`,
+            width: `${totalWidth}%`,
+            zIndex: zIndexTotal,
             borderRadius: "7px 0 0 7px",
             height: "100%",
-            backgroundColor: "#00a76f", // Fixed color for first progression
+            left: 0,
+            backgroundColor: "#ffa500", // Fixed color for total
             transition: "width 0.5s ease-in-out",
+            position: "absolute", // Needed to ensure proper stacking
           }}
         ></Box>
 
-        {/* Second Progression */}
+        {/* Target Progression */}
         <Box
           sx={{
-            width: `${visibleProgression2}%`,
-            borderRadius:
-              visibleProgression1 + visibleProgression2 >= 100
-                ? "0 7px 7px 0"
-                : "0",
+            width: `${targetWidth}%`,
+            zIndex: zIndexTarget,
+            borderRadius: "0",
             height: "100%",
-            backgroundColor: "#ff5630", // Fixed color for second progression
+            left: 0,
+            backgroundColor: "#ff5630", // Fixed color for target
             transition: "width 0.5s ease-in-out",
             position: "absolute",
-            left: `${visibleProgression1}%`,
+          }}
+        ></Box>
+
+        {/* Achieved Progression */}
+        <Box
+          sx={{
+            width: `${achievedWidth}%`,
+            zIndex: zIndexAchieved,
+            borderRadius: "0 7px 7px 0",
+            height: "100%",
+            left: 0,
+            backgroundColor: "#00a76f", // Fixed color for achieved
+            transition: "width 0.5s ease-in-out",
+            position: "absolute",
           }}
         ></Box>
       </Box>
