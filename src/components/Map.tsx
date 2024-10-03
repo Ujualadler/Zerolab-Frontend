@@ -1402,7 +1402,9 @@ const MapShow: React.FC = () => {
             <div className="mt-3  p-4 px-6 ">
               <h1 className="text-white text-xl mb-3">Team A</h1>
               <h1 className="text-[#80FF00] text-2xl">
-                ₹{targetValue?.closed?.toLocaleString("en-IN")}
+                {/* ₹{targetValue?.closed?.toLocaleString("en-IN")} */}
+                ₹70,85,000
+
               </h1>
               <div className="flex item center gap-2 mt-2">
                 <h1 className="text-[#80FF00] text-lg">34%</h1>
@@ -1425,12 +1427,15 @@ const MapShow: React.FC = () => {
               <div className="flex items-start flex-col gap-1 mb-[3px]">
                 <h1 className="text-[#C4C4C4] text-xs">Achieved</h1>
                 <h1 className="text-[#00a76f] text-xs">
-                  ₹{targetValue?.closed?.toLocaleString("en-IN")}
+                  {/* ₹{targetValue?.closed?.toLocaleString("en-IN")} */}
+                  ₹70,85,000
                 </h1>
               </div>
               <div className="flex items-end flex-col gap-1 mb-[3px]">
                 <h1 className="text-[#80FF00] text-sm">
-                  {Math.round((targetValue?.closed / 28700000) * 100 * 10) / 10}
+                  {/* {Math.round((targetValue?.closed / 20400000) * 100 * 10) / 10} */}
+                  {Math.round((7085000/ 20400000) * 100 * 10) / 10}
+
                   %
                 </h1>
                 <h1 className="text-[#C4C4C4] text-xs">Total target status</h1>
@@ -1442,21 +1447,24 @@ const MapShow: React.FC = () => {
               width={100}
             /> */}
             <LeadProgressBar
-              achieved={(targetValue?.closed / 28700000) * 100}
-              total={(targetValue?.target / 28700000) * 100}
-              target={(28700000 / 28700000) * 100}
+              achieved={(7085000/20400000) * 100}
+              // achieved={(targetValue?.closed / 28700000) * 100}
+              total={(targetValue?.target / 20400000) * 100}
+              target={(20400000 / 20400000) * 100}
               width={100}
             />
             <div className="flex justify-between w-[100%] mt-1">
               <div className="flex  gap-1 mb-[3px] items-start flex-col ">
                 <h1 className="text-[#C4C4C4] text-xs">Total Lead</h1>
                 <h1 className="text-[#ffa500] text-xs">
+                  {/* ₹{targetValue?.target?.toLocaleString("en-IN")} */}
                   ₹{targetValue?.target?.toLocaleString("en-IN")}
+
                 </h1>
               </div>
               <div className="flex justify-end  items-end flex-col gap-1 mb-[3px]">
                 <h1 className="text-[#C4C4C4] text-xs">Target</h1>
-                <h1 className="text-xs text-[#ff5630]">₹22,00,000</h1>
+                <h1 className="text-xs text-[#ff5630]">₹20,4,00,000</h1>
               </div>
             </div>
             <div
@@ -1603,21 +1611,29 @@ const MapShow: React.FC = () => {
                   </div>
                   <div className="flex gap-2 items-baseline">
                     <LeadProgressBar
-                      achieved={(targetValue?.closed / 28700000) * 100}
-                      total={(targetValue?.target / 28700000) * 100}
-                      target={(28700000 / 28700000) * 100}
+                      // achieved={(targetValue?.closed / 28700000) * 100}
+                      achieved={(7085000/ 20400000) * 100}
+
+                      total={(targetValue?.target / 20400000) * 100}
+                      target={(20400000 / 20400000) * 100}
                       width={50}
                     />
                     <h1 className="text-[#80FF00] text-xl">
-                      {Math.round(
+                      {/* {Math.round(
                         (targetValue?.closed / targetValue?.target) * 100 * 10
+                      ) / 10}
+                      % */}
+                         {Math.round(
+                        (7085000/ 20400000) * 100 * 10
                       ) / 10}
                       %
                     </h1>
                   </div>
                   <div className="flex justify-end w-[50%] ">
                     <h1 className="text-[#C4C4C4] text-xl">
-                      ₹{targetValue?.target?.toLocaleString("en-IN")}
+                      {/* ₹{targetValue?.target?.toLocaleString("en-IN")} */}
+                      ₹20,4,00,000
+
                     </h1>
                   </div>
                 </div>
