@@ -21,10 +21,11 @@ interface ConfirmationProps {
   open: boolean;
   show: (value: boolean) => void;
   handle?: any;
-  
+  message?: string;
+  type?: string;
 }
 
-export default function ConfirmationModal({show,open,handle}:ConfirmationProps) {
+export default function ConfirmationModal({show,open,handle, message, type}:ConfirmationProps) {
  // Added type annotation for useState
 
  
@@ -41,11 +42,11 @@ export default function ConfirmationModal({show,open,handle}:ConfirmationProps) 
         <Box sx={style}>
           <Box sx={{display:'flex',flexDirection:'column'}}>
             <Typography my={2} color={'white'}>
-            Are you sure you want to save this Lead Detail?
+            {message || "Are you sure you want to save this Lead Detail?" }
             </Typography>
             <Box sx={{display:'flex',width:'100%',alignItems:'center',gap:2}}>
               <Button variant='contained' size='small' sx={{width:'50%',background:'#4D9900'}} onClick={handleClose}>Cancel</Button>
-              <Button variant='contained' size='small' sx={{width:'50%',background:'#4D9900'}} onClick={()=>handle()}>Save</Button>
+              <Button variant='contained' size='small' sx={{width:'50%',background:'#4D9900'}} onClick={()=>handle()}>{type === "Requirement Gathering" ? "Continue" : "Save"}</Button>
             </Box>
           </Box>
         </Box>

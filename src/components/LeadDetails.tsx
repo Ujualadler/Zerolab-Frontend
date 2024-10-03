@@ -23,6 +23,8 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { baseURL } from "@/Constants/constants";
 import { Changa } from "next/font/google";
+import ConfirmationModal from "./ConfirmationModal";
+
 
 const style = {
   position: "absolute" as "absolute",
@@ -59,6 +61,7 @@ const initialColumns: Column[] = [
   { id: "Lead Generation", title: "Lead Generation", tasks: [] },
   { id: "Qualification", title: "Qualification", tasks: [] },
   { id: "Demo", title: "Demo", tasks: [] },
+  { id: "Requirement Gathering", title: "Requirement Gathering", tasks: [] },
   { id: "Proposal", title: "Proposal", tasks: [] },
   { id: "Negotiation", title: "Negotiation", tasks: [] },
   { id: "Closed", title: "Closed", tasks: [] },
@@ -71,6 +74,8 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
   const [showFormAdd, setShowFormAdd] = React.useState<boolean>(false);
   const [leadData, setLeadData] = React.useState<any>({});
   const [isUpdated, setIsUpdated] = React.useState<boolean>(false);
+  const [requirementConfirmModal, setRequirementConfirmModal] = React.useState<boolean>(false); 
+  const [isRequirementGathering, setRequirementGathering] = React.useState<boolean>(false);
   const handleClose = () =>{
     change(true)
     show(false);
@@ -124,7 +129,11 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
     }
   }, [id, isUpdated]);
 
-
+  React.useEffect(() => {
+    if(isRequirementGathering) {
+      router.push(`requirement-gathering?leadId=${id}`);
+    }
+  }, [isRequirementGathering]);
 
   const handleViewForm = (id: string) => {
     router.push(`/formPage/${id}`);
@@ -188,6 +197,9 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
       if (response.data.message === "success") {
         setIsUpdated(!isUpdated); 
         change(true)// Trigger a re-fetch if needed
+        if(destination?.droppableId === "Requirement Gathering") {
+          setRequirementConfirmModal(true);
+        }
       }
     } catch (error) {
       console.log(error);
@@ -206,6 +218,7 @@ export default function LeadDetails({ open, show, id,change }: LeadDetailsProps)
 
   return (
     <div>
+      {requirementConfirmModal && <ConfirmationModal show={setRequirementConfirmModal} open={requirementConfirmModal} handle={() => setRequirementGathering(true)} message={"Do you want to do requirement gathering?"} type={"Requirement Gathering"} /> }
       {showFormAdd && <FormAdd id={leadData?._id} show={setShowFormAdd} open={showFormAdd} />}
       <Modal
         open={open}

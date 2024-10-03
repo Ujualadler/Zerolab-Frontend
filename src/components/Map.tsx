@@ -35,6 +35,7 @@ import {
 } from "@mui/icons-material";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "../app/Assets/style/map.css";
+import Papa from 'papaparse';
 
 import SearchIcon from "@mui/icons-material/Search";
 // import PipelineProgressbar from "./PipelineProgressBar";
@@ -548,6 +549,9 @@ const MapShow: React.FC = () => {
     status: "",
   });
 
+
+  const [csvData, setCsvData] = useState<Array<object>>([]);
+
   const handleToggle = (index: number, url: string) => {
     setActiveToggle(index);
     router.push(url);
@@ -993,6 +997,49 @@ const MapShow: React.FC = () => {
       100
   );
 
+  const handleBulkInput = () => {
+    const element = document.getElementById('bulk-input');
+    if (element) {
+      element.click(); // Simulate a click on the hidden input
+    }
+  
+  }
+
+  const handleSelectFile = (event: any) => {
+    console.log('selecting..')
+    const file = event.target.files[0];
+    console.log("file:",file); // Handle the file upload logic here
+    if (file) {
+      Papa.parse(file, {
+        header: true, // If the CSV has headers, use this option
+        complete: (result) => {
+          setCsvData(result?.data as object[]); // Set parsed data to state
+        },
+        error: (error) => {
+          console.error('Error while parsing the file:', error);
+        },
+      });
+    }
+  };
+
+  useEffect(() => { 
+    async function upload() {
+      try {
+        if(csvData?.length > 0) {
+          const response = await axios.post(`${baseURL}/lead-bulk`, { csvData });
+          if(response.data.message==='success') {
+            console.log('success');
+            alert("Uploaded successfully");
+          }
+          console.log("csv data:",csvData);
+        }
+      } catch(e) {
+        console.log(e);
+      }
+    }
+    upload();
+  }, [csvData]);
+
   return (
     <>
       {addLeads && <LeadAdding open={addLeads} show={setAddLeads} />}
@@ -1409,7 +1456,7 @@ const MapShow: React.FC = () => {
               </div>
               <div className="flex justify-end  items-end flex-col gap-1 mb-[3px]">
                 <h1 className="text-[#C4C4C4] text-xs">Target</h1>
-                <h1 className="text-xs text-[#ff5630]">₹2,87,00000</h1>
+                <h1 className="text-xs text-[#ff5630]">₹22,00,000</h1>
               </div>
             </div>
             <div
@@ -1846,15 +1893,27 @@ const MapShow: React.FC = () => {
               <div className="col-span-8 mt-6 flex flex-col gap-4">
                 <div className="flex justify-between items-center w-[100%]">
                   <h3 className="text-white text-lg mb-4">I/O Sales Matrix</h3>
-                  <Button
-                    endIcon={<AddIcon />}
-                    onClick={() => setAddLeads(true)}
-                    variant="contained"
-                    disableElevation
-                    sx={{ textTransform: "none", background: "#48820E" }}
-                  >
-                    Add Leads
-                  </Button>
+                  <div className="flex gap-2">
+                    <input id="bulk-input" onChange={handleSelectFile} type="file" style={{display: 'none' }} />
+                    <Button
+                      endIcon={<AddIcon />}
+                      onClick={handleBulkInput}
+                      variant="contained"
+                      disableElevation
+                      sx={{ textTransform: "none", background: "#48820E" }}
+                    >
+                      Bulk Upload
+                    </Button>
+                    <Button
+                      endIcon={<AddIcon />}
+                      onClick={() => setAddLeads(true)}
+                      variant="contained"
+                      disableElevation
+                      sx={{ textTransform: "none", background: "#48820E" }}
+                    >
+                      Add Leads
+                    </Button>
+                  </div>
                 </div>
                 <SalesMatrixTable
                   type={showTable}

@@ -529,11 +529,11 @@ const SalesMatrixTable: React.FC<SalesMatrixTableProps> = ({
                     sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}
                     align="left"
                   >
-                    {row.products.map((data: any) => (
+                    {/* {row.products?.length > 0 && row?.products?.map((data: any) => (
                       <h5 key={data?.productId?.name} className="text-white">
                         {data?.productId?.name}
                       </h5>
-                    ))}
+                    ))} */}
                   </TableCell>
                   <TableCell
                     sx={{ color: "white", borderRight: "1px solid #5F5C5C" }}

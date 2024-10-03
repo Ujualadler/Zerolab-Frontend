@@ -24,6 +24,7 @@
     "mapbox-gl": "^3.5.2",
     "next": "14.2.4",
     "next-auth": "^4.24.7",
+    "papaparse": "^5.4.1",
     "react": "^18",
     "react-apexcharts": "^1.4.1",
     "react-beautiful-dnd": "^13.1.1",
@@ -31,9 +32,11 @@
     "react-date-range": "^2.0.1",
     "react-dom": "^18",
     "react-draggable": "^4.4.6",
-    "react-quill": "^2.0.0"
+    "react-quill": "^2.0.0",
+    "react-toastify": "^10.0.5"
   },
   "devDependencies": {
+    "@types/papaparse": "^5.3.14",
     "@types/react-date-range": "^1.4.9",
     "eslint": "^8",
     "eslint-config-next": "14.2.4",

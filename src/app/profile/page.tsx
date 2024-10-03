@@ -11,6 +11,8 @@ import {
   InputAdornment,
   Switch,
   FormControlLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import React, { useState, ChangeEvent, useEffect } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -23,6 +25,10 @@ import ProfileTable from "@/components/ProfileTable";
 import { ArrowBack } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { baseURL } from "@/Constants/constants";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import { ToastContainer, toast } from "react-toastify";
+import ProductList from "@/components/ProductList";
+import "react-toastify/dist/ReactToastify.css";
 
 const textFieldStyle = {
   "& .MuiOutlinedInput-root": {
@@ -71,12 +77,29 @@ interface Feature {
 
 interface Product {
   _id?: string;
+  type: string;
+  package: string;
   name: string;
   price: string;
   features: Feature[];
   isEditing: boolean; // New property to track editing state
   isChange: boolean; // New property to track editing state
 }
+
+const productTypes: ("Single" | "Multiple" | "Package")[] = [
+  "Single",
+  "Multiple",
+  "Package",
+];
+
+const packageTypes: ("Single" | "Multiple")[] = ["Single", "Multiple"];
+
+const packages: ("Basic" | "Medium" | "Premium")[] = [
+  "Basic",
+  "Medium",
+  "Premium",
+];
+
 const Page: React.FC = () => {
   const router = useRouter();
   const [email, setEmail] = useState<string>("");
@@ -92,6 +115,35 @@ const Page: React.FC = () => {
   const [featurePrices, setFeaturePrices] = useState<string[]>([]);
   const [isEditing, serIsEditing] = useState<boolean>(false);
 
+  const [productType, setProductType] = useState<string>("Single");
+
+  const [packageType, setPackageType] = useState<string>("Single");
+
+  const [packageName, setPackageName] = useState<string>("Basic");
+
+  const [multipleProducts, setMultipleProducts] = useState<Product[]>([]);
+
+  const [subProductName, setSubProductName] = useState<string>("");
+  const [subProductPrice, setSubProductPrice] = useState<string>("");
+
+  const [singleProductName, setSingleProductName] = useState<string>("");
+  const [singleProductPrice, setSingleProductPrice] = useState<string>("");
+
+  const [packageProductName, setPackageProductName] = useState<string>("");
+  const [packageProductPrice, setPackageProductPrice] = useState<string>("");
+
+  const [packageSubProductName, setPackageSubProductName] =
+    useState<string>("");
+  const [packageSubProductPrice, setPackageSubProductPrice] =
+    useState<string>("");
+
+  const [packageMultipleProductName, setPackageMultipleProductName] =
+    useState<string>("");
+  const [packageMultipleProductPrice, setPackgeMultipleProductPrice] =
+    useState<string>("");
+
+  const [isListProduct, setListProduct] = useState<boolean>(false);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -100,8 +152,8 @@ const Page: React.FC = () => {
           ...product,
           isEditing: false, // Add isEditing property to each product
         }));
-        setProducts(fetchedProducts);
-        setInitialProducts(fetchedProducts);
+        // setProducts(fetchedProducts);
+        // setInitialProducts(fetchedProducts);
       } catch (error) {
         console.error("Failed to fetch products:", error);
       }
@@ -110,7 +162,7 @@ const Page: React.FC = () => {
     fetchProducts();
   }, []);
 
-  console.log(products);
+  const notify = (message: string) => toast(message);
 
   const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -159,22 +211,174 @@ const Page: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    console.log(products);
+  }, [products]);
+
   const handleAddProduct = () => {
-    if (productName && productPrice) {
+    console.log(productType, packageType);
+    if (productType === "Single" && singleProductName && singleProductPrice) {
       setProducts([
         ...products,
         {
-          name: productName,
-          price: productPrice,
+          name: singleProductName,
+          type: productType,
+          package: "",
+          price: singleProductPrice,
+          features: [],
+          isEditing: false,
+          isChange: false,
+        },
+      ]);
+      setFeatureNames([...featureNames, ""]);
+      setFeaturePrices([...featurePrices, ""]);
+      setSingleProductName("");
+      setSingleProductPrice("");
+    } else if (
+      productType === "Multiple" &&
+      productName &&
+      productPrice &&
+      subProductName &&
+      subProductPrice
+    ) {
+      const product = products.filter((item) => item.type === "Multiple");
+      let productTotalPrice = 0;
+      if (product.length > 0) {
+        productTotalPrice = product[0].features.reduce((totalPrice, item) => {
+          return totalPrice + parseFloat(item.price);
+        }, 0);
+        productTotalPrice += parseFloat(subProductPrice);
+        console.log("product", product);
+        setProducts((prevProducts) => [
+          ...prevProducts.map((p) =>
+            p.type === "Multiple"
+              ? {
+                  ...p,
+                  price: `${productTotalPrice}`,
+                  features: [
+                    ...p.features,
+                    {
+                      name: subProductName,
+                      price: subProductPrice,
+                    },
+                  ],
+                }
+              : p
+          ),
+        ]);
+      } else {
+        productTotalPrice = parseFloat(subProductPrice);
+        setProducts((prevProducts) => [
+          ...prevProducts,
+          {
+            name: productName,
+            type: productType,
+            package: "",
+            price: `${productTotalPrice}`,
+            features: [
+              {
+                name: subProductName,
+                price: subProductPrice,
+              },
+            ],
+            isEditing: false, // Default isEditing state is false
+            isChange: true, // Default isChange state is true
+          },
+        ]);
+      }
+      console.log(productTotalPrice);
+      setProductPrice(`${productTotalPrice}`);
+
+      setSubProductName("");
+      setSubProductPrice("");
+    } else if (
+      productType === "Package" &&
+      packageType === "Single" &&
+      packageProductName &&
+      packageProductPrice
+    ) {
+      setProducts([
+        ...products,
+        {
+          name: packageProductName,
+          type: productType,
+          package: packageName,
+          price: packageProductPrice,
           features: [],
           isEditing: false, // Default isEditing state is false
           isChange: true, // Default isChanging state is false
         },
       ]);
-      setFeatureNames([...featureNames, ""]);
-      setFeaturePrices([...featurePrices, ""]);
-      setProductName("");
-      setProductPrice("");
+
+      setPackageProductName("");
+      setPackageProductPrice("");
+    } else if (
+      productType === "Package" &&
+      packageType === "Multiple" &&
+      packageMultipleProductName &&
+      packageMultipleProductPrice &&
+      packageSubProductName &&
+      packageSubProductPrice
+    ) {
+      const product = products.filter(
+        (item) => item.type === "Package" && item.features.length > 0
+      );
+      console.log(product);
+      let productTotalPrice = 0;
+      if (product.length > 0) {
+        productTotalPrice = product[0].features.reduce((totalPrice, item) => {
+          return totalPrice + parseFloat(item.price);
+        }, 0);
+        productTotalPrice += parseFloat(packageSubProductPrice);
+        setProducts((prevProducts) => [
+          ...prevProducts.map((p) =>
+            p.type === "Package" && p.features.length > 0
+              ? {
+                  ...p,
+                  price: `${productTotalPrice}`,
+                  features: [
+                    ...p.features,
+                    {
+                      name: packageSubProductName,
+                      price: packageSubProductPrice,
+                    },
+                  ],
+                }
+              : p
+          ),
+        ]);
+      } else {
+        productTotalPrice = parseFloat(packageSubProductPrice);
+        console.log(productTotalPrice);
+        setProducts((prevProducts) => [
+          ...prevProducts,
+          {
+            name: packageMultipleProductName,
+            type: productType,
+            package: packageName,
+            price: `${productTotalPrice}`,
+            features: [
+              {
+                name: packageSubProductName,
+                price: packageSubProductPrice,
+              },
+            ],
+            isEditing: false, // Default isEditing state is false
+            isChange: true, // Default isChange state is true
+          },
+        ]);
+      }
+      setPackgeMultipleProductPrice(`${productTotalPrice}`);
+      setPackageSubProductName("");
+      setPackageSubProductPrice("");
+    }
+  };
+
+  const handleAddSubProduct = () => {
+    console.log(products);
+    if (subProductName && subProductPrice) {
+      const product = products.filter((item) => item.type === "Multiple");
+      console.log(product);
     }
   };
 
@@ -235,44 +439,48 @@ const Page: React.FC = () => {
     setProducts(updatedProducts);
   };
 
-  const saveProduct = async (product: Product, index: number) => {
+  const saveProduct = async () => {
     try {
-      let response;
-      console.log(product);
-      if (product._id) {
-        response = await axios.post(`${baseURL}/product`, {
-          id: product._id,
-          name: product.name,
-          price: product.price,
-          features: product.features,
-        });
-      } else {
-        // Create new product
-        response = await axios.post(`${baseURL}/product`, {
-          name: product.name,
-          price: product.price,
-          features: product.features,
-        });
+      console.log("products", products);
+      let productData: Product | any = {};
+      if (productType === "Single") {
+        productData = products.find((item, index) => item.type === "Single");
+      } else if (productType === "Multiple") {
+        productData = products.find((item, index) => item.type === "Multiple");
+      } else if (productType === "Package" && packageType === "Single") {
+        productData = products.find(
+          (item, index) => item.type === "Package" && !item.features.length
+        );
+      } else if (productType === "Package" && packageType === "Multiple") {
+        productData = products.find(
+          (item, index) => item.type === "Package" && item.features.length
+        );
       }
-
-      const updatedProducts = [...products];
-      updatedProducts[index] = {
-        ...response.data,
-        isEditing: false,
-        isChange: false,
-      }; // Update product with response data and stop editing
-      setProducts(updatedProducts);
+      if (productData) {
+        try {
+          const { data } = await axios.post(`${baseURL}/product`, productData);
+          console.log(data);
+          notify("Product created");
+        } catch (e) {
+          console.log(e);
+        }
+      }
     } catch (error) {
       console.error("Failed to save product:", error);
     }
   };
 
   return (
+    <>
+    
+    {isListProduct && <ProductList open={isListProduct} show={setListProduct} /> }
     <div
       style={{
         background: "linear-gradient(180deg, #011719 0%, #03292C 100%)",
       }}
     >
+      
+      <ToastContainer />
       <Grid container>
         <Grid item md={2} sx={{ background: "black", height: "100vh" }}>
           <Box
@@ -497,17 +705,584 @@ const Page: React.FC = () => {
         {activeItem === "Products" && (
           <Grid item container md={10} alignContent={"start"}>
             <Box sx={{ p: 3, width: "100%" }}>
-              <Typography
-                color={"white"}
-                fontWeight={600}
-                fontSize={"1.2rem"}
-                mb={2}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
               >
-                Products Details
-              </Typography>
+                <Typography
+                  color={"white"}
+                  fontWeight={600}
+                  fontSize={"1.2rem"}
+                  mb={2}
+                >
+                  Products
+                </Typography>
+                <Button
+                  onClick={() => setListProduct(true)}
+                  variant="contained"
+                  disableElevation
+                  sx={{ textTransform: "none", background: "#48820E" }}
+                >
+                  List products
+                </Button>
+              </Box>
               <Divider sx={{ background: "white", width: "100%" }} />
             </Box>
-            <Grid
+            <Box display={"flex"} gap={2} ml={3}>
+              {productTypes.map((type, index) => {
+                return (
+                  <Box
+                    key={index}
+                    color={productType === type ? "#4D9900" : "white"}
+                    sx={{
+                      background: "#03383D",
+                      p: 2,
+                    }}
+                    onClick={() => setProductType(type)}
+                  >
+                    {type}
+                  </Box>
+                );
+              })}
+            </Box>
+            {productType === "Single" && (
+              <Grid container>
+                <Grid
+                  item
+                  display={"flex"}
+                  flexDirection={"column"}
+                  alignItems={"start"}
+                  gap={"10px"}
+                  xs={12}
+                  px={3}
+                  mt={5}
+                >
+                  {products.map((item, index) => {
+                    return (
+                      item.type === "Single" && (
+                        <Box
+                          key={index}
+                          display={"flex"}
+                          alignItems={"center"}
+                          gap={2}
+                        >
+                          <TextField
+                            sx={textFieldStyle}
+                            type="text"
+                            placeholder="Enter Product Name"
+                            value={item.name}
+                            // onChange={(e) => setProductName(e.target.value)}
+                          />
+                          <TextField
+                            sx={textFieldStyle}
+                            type="text"
+                            placeholder="Enter Product Price"
+                            value={item.price}
+                            // onChange={(e) => setProductPrice(e.target.value)}
+                          />
+                          {/* <IconButton
+                            sx={{ color: "#4D9900" }}
+                            onClick={handleAddProduct}
+                          >
+                            <AddIcon />
+                          </IconButton> */}
+                        </Box>
+                      )
+                    );
+                  })}
+                  <Box display={"flex"} alignItems={"center"} gap={2}>
+                    <TextField
+                      sx={textFieldStyle}
+                      type="text"
+                      placeholder="Enter Product Name"
+                      value={singleProductName}
+                      onChange={(e) => setSingleProductName(e.target.value)}
+                    />
+                    <TextField
+                      sx={textFieldStyle}
+                      type="text"
+                      placeholder="Enter Product Price"
+                      value={singleProductPrice}
+                      onChange={(e) => setSingleProductPrice(e.target.value)}
+                    />
+                    <IconButton
+                      sx={{ color: "#4D9900" }}
+                      onClick={handleAddProduct}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Box>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => saveProduct()}
+                    sx={{
+                      color: "white",
+                      ml: "420px",
+                      mt: 3,
+                      background: "#4D9900",
+                    }}
+                    startIcon={<SaveIcon />}
+                  >
+                    Save
+                  </Button>
+                </Grid>
+              </Grid>
+            )}
+            {productType === "Multiple" && (
+              <>
+                <Grid
+                  item
+                  display={"flex"}
+                  flexDirection={"column"}
+                  gap={"20px"}
+                  alignItems={"start"}
+                  xs={12}
+                  px={3}
+                  mt={5}
+                >
+                  <Box display={"flex"} alignItems={"center"} gap={2}>
+                    <TextField
+                      sx={textFieldStyle}
+                      type="text"
+                      placeholder="Enter Product Name"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                    />
+                    <TextField
+                      sx={textFieldStyle}
+                      type="text"
+                      placeholder="Enter Price"
+                      value={productPrice}
+                      onChange={(e) => setProductPrice(e.target.value)}
+                    />
+                  </Box>
+                  {products
+                    .filter((item, index) => item.type === "Multiple")
+                    .map((item, index) => {
+                      return (
+                        <>
+                          {item.features.map((subProduct, subProductIndex) => {
+                            return (
+                              <Box
+                                key={subProductIndex}
+                                display={"flex"}
+                                alignItems={"center"}
+                                gap={2}
+                                ml={5}
+                              >
+                                <TextField
+                                  sx={textFieldStyle}
+                                  type="text"
+                                  placeholder="Enter Subproduct Name"
+                                  value={subProduct.name}
+                                  // onChange={(e) =>
+                                  //   setProductName(e.target.value)
+                                  // }
+                                />
+                                <TextField
+                                  sx={textFieldStyle}
+                                  type="text"
+                                  placeholder="Enter Price"
+                                  value={subProduct.price}
+                                  // onChange={(e) =>
+                                  //   setProductPrice(e.target.value)
+                                  // }
+                                />
+                                {/* <IconButton
+                                  sx={{ color: "#4D9900" }}
+                                  onClick={handleAddProduct}
+                                >
+                                  <AddIcon />
+                                </IconButton> */}
+                              </Box>
+                            );
+                          })}
+                        </>
+                      );
+                    })}
+                  <Box display={"flex"} alignItems={"center"} gap={2} ml={5}>
+                    <TextField
+                      sx={textFieldStyle}
+                      type="text"
+                      placeholder="Enter Subproduct Name"
+                      value={subProductName}
+                      onChange={(e) => setSubProductName(e.target.value)}
+                    />
+                    <TextField
+                      sx={textFieldStyle}
+                      type="text"
+                      placeholder="Enter Price"
+                      value={subProductPrice}
+                      onChange={(e) => setSubProductPrice(e.target.value)}
+                    />
+                    <IconButton
+                      sx={{ color: "#4D9900" }}
+                      onClick={handleAddProduct}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Box>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => saveProduct()}
+                    sx={{
+                      color: "white",
+                      ml: "460px",
+                      mt: 3,
+                      background: "#4D9900",
+                    }}
+                    startIcon={<SaveIcon />}
+                  >
+                    Save
+                  </Button>
+                </Grid>
+              </>
+            )}
+            {productType === "Package" && (
+              <Grid container>
+                <Grid
+                  item
+                  display={"flex"}
+                  gap={"20px"}
+                  // justifyContent={"space-between"}
+                  alignItems={"center"}
+                  xs={12}
+                  px={8}
+                  mt={5}
+                >
+                  <Box>
+                    <Typography>Select package type</Typography>
+                    <Select
+                      value={packageType} // Use state name or an empty string if none selected
+                      onChange={(e) => setPackageType(e.target.value)}
+                      sx={{
+                        mt: 2,
+                        height: "40px",
+                        bgcolor: "black",
+                        color: "white",
+                        fontSize: "12px",
+                      }}
+                      IconComponent={(props) => (
+                        <ArrowDropDownIcon
+                          {...props}
+                          style={{ color: "#80FF00" }}
+                        />
+                      )}
+                      displayEmpty
+                    >
+                      {packageTypes.map((type, index) => {
+                        return (
+                          <MenuItem key={index} value={type}>
+                            {type}
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </Box>
+                  <Box>
+                    <Typography>Select package</Typography>
+                    <Select
+                      value={packageName} // Use state name or an empty string if none selected
+                      onChange={(e) => setPackageName(e.target.value)}
+                      sx={{
+                        mt: 2,
+                        height: "40px",
+                        bgcolor: "black",
+                        color: "white",
+                        fontSize: "12px",
+                      }}
+                      IconComponent={(props) => (
+                        <ArrowDropDownIcon
+                          {...props}
+                          style={{ color: "#80FF00" }}
+                        />
+                      )}
+                      displayEmpty
+                    >
+                      {packages.map((type, index) => {
+                        return (
+                          <MenuItem key={index} value={type}>
+                            {type}
+                          </MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </Box>
+                </Grid>
+                {packageType === "Single" ? (
+                  <Grid container>
+                    <Grid
+                      item
+                      display={"flex"}
+                      flexDirection={"column"}
+                      gap={"20px"}
+                      alignItems={"start"}
+                      xs={12}
+                      px={3}
+                      mt={5}
+                    >
+                      {products.map((item, index) => {
+                        return (
+                          item.type === "Package" &&
+                          packageType === "Single" &&
+                          item.features.length < 1 && (
+                            <Box
+                              key={index}
+                              display={"flex"}
+                              alignItems={"center"}
+                              gap={2}
+                            >
+                              <TextField
+                                sx={textFieldStyle}
+                                type="text"
+                                placeholder="Enter Product Name"
+                                value={item.name}
+                                // onChange={(e) =>
+                                //   setPackageProductName(e.target.value)
+                                // }
+                              />
+                              <TextField
+                                sx={textFieldStyle}
+                                type="text"
+                                placeholder="Enter Product Price"
+                                value={item.price}
+                                // onChange={(e) =>
+                                //   setPackageProductPrice(e.target.value)
+                                // }
+                              />
+                              {/* <IconButton
+                              sx={{ color: "#4D9900" }}
+                              onClick={handleAddProduct}
+                            >
+                              <AddIcon />
+                            </IconButton> */}
+                            </Box>
+                          )
+                        );
+                      })}
+                      <Box display={"flex"} alignItems={"center"} gap={2}>
+                        <TextField
+                          sx={textFieldStyle}
+                          type="text"
+                          placeholder="Enter Product Name"
+                          value={packageProductName}
+                          onChange={(e) =>
+                            setPackageProductName(e.target.value)
+                          }
+                        />
+                        <TextField
+                          sx={textFieldStyle}
+                          type="text"
+                          placeholder="Enter Product Price"
+                          value={packageProductPrice}
+                          onChange={(e) =>
+                            setPackageProductPrice(e.target.value)
+                          }
+                        />
+                        <IconButton
+                          sx={{ color: "#4D9900" }}
+                          onClick={handleAddProduct}
+                        >
+                          <AddIcon />
+                        </IconButton>
+                      </Box>
+                    </Grid>
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => saveProduct()}
+                        sx={{
+                          color: "white",
+                          ml: "420px",
+                          mt: 3,
+                          background: "#4D9900",
+                        }}
+                        startIcon={<SaveIcon />}
+                      >
+                        Save
+                      </Button>
+                    </Grid>
+                  </Grid>
+                ) : (
+                  <>
+                    <Grid
+                      item
+                      display={"flex"}
+                      flexDirection={"column"}
+                      gap={"20px"}
+                      alignItems={"start"}
+                      xs={12}
+                      px={3}
+                      mt={5}
+                    >
+                      <Box display={"flex"} alignItems={"center"} gap={2}>
+                        <TextField
+                          sx={textFieldStyle}
+                          type="text"
+                          placeholder="Enter Product Name"
+                          value={packageMultipleProductName}
+                          onChange={(e) =>
+                            setPackageMultipleProductName(e.target.value)
+                          }
+                        />
+                        <TextField
+                          sx={textFieldStyle}
+                          type="text"
+                          placeholder="Enter Price"
+                          value={packageMultipleProductPrice}
+                          onChange={(e) =>
+                            setPackgeMultipleProductPrice(e.target.value)
+                          }
+                        />
+                        {/* <IconButton
+                          sx={{ color: "#4D9900" }}
+                          onClick={handleAddProduct}
+                        >
+                          <AddIcon />
+                        </IconButton> */}
+                      </Box>
+                      {products
+                        .filter(
+                          (item, index) =>
+                            item.type === "Package" &&
+                            packageType === "Multiple"
+                        )
+                        .map((item, index) => {
+                          return (
+                            <>
+                              {item.features.map(
+                                (subProduct, subProductIndex) => {
+                                  return (
+                                    <Box
+                                      key={subProductIndex}
+                                      display={"flex"}
+                                      alignItems={"center"}
+                                      gap={2}
+                                      ml={5}
+                                    >
+                                      <TextField
+                                        sx={textFieldStyle}
+                                        type="text"
+                                        placeholder="Enter Subproduct Name"
+                                        value={subProduct.name}
+                                        // onChange={(e) =>
+                                        //   setProductName(e.target.value)
+                                        // }
+                                      />
+                                      <TextField
+                                        sx={textFieldStyle}
+                                        type="text"
+                                        placeholder="Enter Price"
+                                        value={subProduct.price}
+                                        // onChange={(e) =>
+                                        //   setProductPrice(e.target.value)
+                                        // }
+                                      />
+                                      {/* <IconButton
+                                  sx={{ color: "#4D9900" }}
+                                  onClick={handleAddProduct}
+                                >
+                                  <AddIcon />
+                                </IconButton> */}
+                                    </Box>
+                                  );
+                                }
+                              )}
+                            </>
+                          );
+                        })}
+
+                      <Box
+                        display={"flex"}
+                        alignItems={"center"}
+                        gap={2}
+                        ml={5}
+                      >
+                        <TextField
+                          sx={textFieldStyle}
+                          type="text"
+                          placeholder="Enter Subproduct Name"
+                          value={packageSubProductName}
+                          onChange={(e) =>
+                            setPackageSubProductName(e.target.value)
+                          }
+                        />
+                        <TextField
+                          sx={textFieldStyle}
+                          type="text"
+                          placeholder="Enter Price"
+                          value={packageSubProductPrice}
+                          onChange={(e) =>
+                            setPackageSubProductPrice(e.target.value)
+                          }
+                        />
+                        <IconButton
+                          sx={{ color: "#4D9900" }}
+                          onClick={handleAddProduct}
+                        >
+                          <AddIcon />
+                        </IconButton>
+                      </Box>
+                    </Grid>
+
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => saveProduct()}
+                        sx={{
+                          color: "white",
+                          ml: "460px",
+                          mt: 3,
+                          background: "#4D9900",
+                        }}
+                        startIcon={<SaveIcon />}
+                      >
+                        Save
+                      </Button>
+                    </Grid>
+                  </>
+                )}
+              </Grid>
+              // {
+              //   packageType === "Single" ?
+              //   <Box display={"flex"} alignItems={"center"} gap={2}>
+              //   <TextField
+              //     sx={textFieldStyle}
+              //     type="text"
+              //     placeholder="Enter Product Name"
+              //     value={productName}
+              //     onChange={(e) => setProductName(e.target.value)}
+              //   />
+              //   <TextField
+              //     sx={textFieldStyle}
+              //     type="text"
+              //     placeholder="Enter Product Price"
+              //     value={productPrice}
+              //     onChange={(e) => setProductPrice(e.target.value)}
+              //   />
+              //   <IconButton
+              //     sx={{ color: "#4D9900" }}
+              //     onClick={handleAddProduct}
+              //   >
+              //     <AddIcon />
+              //   </IconButton>
+              // </Box> :
+              // <></>
+              // }
+            )}
+
+            {/* <Grid
               item
               display={"flex"}
               justifyContent={"space-between"}
@@ -537,8 +1312,8 @@ const Page: React.FC = () => {
                   <AddIcon />
                 </IconButton>
               </Box>
-            </Grid>
-            <Grid item container xs={12}>
+            </Grid> */}
+            {/* <Grid item container xs={12}>
               {products.map((product, productIndex) => (
                 <Grid item md={4} key={productIndex} px={4} mt={4}>
                   <Box
@@ -769,7 +1544,7 @@ const Page: React.FC = () => {
                   </Box>
                 </Grid>
               ))}
-            </Grid>
+            </Grid> */}
           </Grid>
         )}
         {activeItem === "Competitor" && (
@@ -789,6 +1564,8 @@ const Page: React.FC = () => {
         )}
       </Grid>
     </div>
+
+    </>
   );
 };
 

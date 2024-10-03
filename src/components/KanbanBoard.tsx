@@ -48,25 +48,30 @@ const initialColumns: Column[] = [
     title: "Demo",
     tasks: [{ id: "task-4", title: "School 4", description: "Description 4" }],
   },
+  // {
+  //   id: "requirement-gathering",
+  //   title: "Requirement Gathering",
+  //   tasks: [{ id: "task-5", title: "School 5", description: "Description 5" }],
+  // },
   {
     id: "proposal",
     title: "Proposal",
-    tasks: [{ id: "task-5", title: "School 5", description: "Description 5" }],
+    tasks: [{ id: "task-6", title: "School 6", description: "Description 6" }],
   },
   {
     id: "negotiation",
     title: "Negotiation",
-    tasks: [{ id: "task-6", title: "School 6", description: "Description 6" }],
+    tasks: [{ id: "task-7", title: "School 7", description: "Description 7" }],
   },
   {
     id: "closure",
     title: "Closure",
-    tasks: [{ id: "task-7", title: "School 7", description: "Description 7" }],
+    tasks: [{ id: "task-8", title: "School 8", description: "Description 8" }],
   },
   {
     id: "retention",
     title: "Retention",
-    tasks: [{ id: "task-8", title: "School 8", description: "Description 8" }],
+    tasks: [{ id: "task-9", title: "School 9", description: "Description 9" }],
   },
 ];
 
